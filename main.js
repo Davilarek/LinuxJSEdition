@@ -83,6 +83,10 @@ client.on("message", (message) => {
 		rmCommand(message);
 		return;
 	}
+	if (message.content.startsWith("$mv")) {
+		mvCommand(message);
+		return;
+	}
 });
 
 function aptCommand(contextMsg) {
@@ -384,6 +388,28 @@ function rmCommand(contextMsg) {
 			else {
 				contextMsg.channel.send("Error: file doesn't exist.");
 			}
+		}
+	}
+}
+function mvCommand(contextMsg) {
+
+	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2]))))) {
+		contextMsg.channel.send("Error: cannot access this path.");
+	}
+	else {
+		if (fs.existsSync(contextMsg.content.split(" ")[1])) {
+			if (!fs.existsSync(contextMsg.content.split(" ")[2])) {
+				fs.rename(contextMsg.content.split(" ")[1], contextMsg.content.split(" ")[2], (err) => {
+					if (err) throw err;
+					contextMsg.channel.send("Done.");
+				});
+			}
+			else {
+				contextMsg.channel.send("Error: target file already exist or is directory.");
+			}
+		}
+		else {
+			contextMsg.channel.send("Error: source file doesn't exist.");
 		}
 	}
 }
