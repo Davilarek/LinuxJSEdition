@@ -1,29 +1,17 @@
 const Discord = require('discord.js')
 const client = new Discord.Client()
 var setTitle = require('console-title');
-bot_secret_token = "ODk2NDEzMzY3MDQyOTczNzc3.YWGwAQ.zYnqSgClyJshTraJ9ZRxxPTuT_k";
 const fs = require('fs')
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
 let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\dir.cfg").toString().split("\n");;
-console.log(ENV_VAR_DISABLED_FOLDERS);
+let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + "\\token.txt").toString();
 client.on('ready', () => {
-	setTitle(client.user.username + " control");
+	setTitle("Linux JS Host");
 	console.log("Connected as " + client.user.tag)
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
-	/*
-	setInterval(() => {
-		if (process.cwd().startsWith("D:\\") || process.cwd().startsWith("F:\\") || process.cwd().startsWith("C:\\")) {
-			process.chdir('E:\\LinuxJSEdition\\VirtualDrive');
-		}
-		if (!process.cwd().includes("VirtualDrive")) {
-			process.chdir('E:\\LinuxJSEdition\\VirtualDrive');
-		}
-	}, 500)
-	*/
-
 });
 
 client.on("message", (message) => {
@@ -436,4 +424,4 @@ function touchCommand(contextMsg) {
 		}
 	}
 }
-client.login(bot_secret_token);
+client.login(ENV_VAR_BOT_TOKEN);
