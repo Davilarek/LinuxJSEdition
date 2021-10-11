@@ -87,6 +87,10 @@ client.on("message", (message) => {
 		mvCommand(message);
 		return;
 	}
+	if (message.content.startsWith("$touch")) {
+		touchCommand(message);
+		return;
+	}
 });
 
 function aptCommand(contextMsg) {
@@ -211,6 +215,10 @@ function catCommand(contextMsg) {
 			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 			console.log(stat.size);
 			if (stat.isFile() == true) {
+
+				if (stat.size == 0) {
+					contextMsg.channel.send("`file is empty`");
+				}
 				if (stat.size > 50000000) {
 					contextMsg.channel.send("Error: file is too big to cat.");
 				}
@@ -410,6 +418,21 @@ function mvCommand(contextMsg) {
 		}
 		else {
 			contextMsg.channel.send("Error: source file doesn't exist.");
+		}
+	}
+}
+function touchCommand(contextMsg) {
+
+	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
+		contextMsg.channel.send("Error: cannot access this path.");
+	}
+	else {
+		if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
+			fs.closeSync(fs.openSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), 'w'));
+			contextMsg.channel.send("Done.");
+		}
+		else {
+			contextMsg.channel.send("Error: target file already exist.");
 		}
 	}
 }

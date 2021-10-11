@@ -1,3 +1,5 @@
+VirtualDrive/*.*
+!VirtualDrive/dir.cfg
 VirtualDrive/home/*.*
 !VirtualDrive/home/empty.txt
 VirtualDrive/tmp/*.*
