@@ -1,14 +1,13 @@
 {
   "name": "linuxjsedition",
   "version": "1.0.0",
-  "description": "",
+  "description": "A basic Linux simulator bot for Discord.",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node main"
   },
   "author": "Davilarek",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "console-title": "^1.1.0",
     "discord.js": "^12.5.3",
@@ -16,5 +15,16 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Davilarek/LinuxJSEdition.git"
+  },
+  "keywords": [
+    "discord"
+  ],
+  "bugs": {
+    "url": "https://github.com/Davilarek/LinuxJSEdition/issues"
+  },
+  "homepage": "https://github.com/Davilarek/LinuxJSEdition#readme"
 }

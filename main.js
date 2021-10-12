@@ -7,6 +7,8 @@ let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
 let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\dir.cfg").toString().split("\n");;
 let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + "\\token.txt").toString();
+let ENV_VAR_ALL_PACKAGES = null;
+let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache";
 client.on('ready', () => {
 	setTitle("Linux JS Host");
 	console.log("Connected as " + client.user.tag)
@@ -18,7 +20,12 @@ client.on("message", (message) => {
 	if (message.author.bot) return;
 
 	if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
-		message.channel.send("Linux JS Edition/ rc1\nLogin: root (automatic login)\n\nLinux JS v0.1.14.5-amd64");
+		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
+		fs.readdirSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache").forEach(file => {
+			console.log(file);
+			let pak = require(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache\\" + file);
+			pak.Init(null, message, client);
+		});
 		ENV_VAR_BOOT_COMPLETE = true;
 		return;
 	}
@@ -80,29 +87,53 @@ client.on("message", (message) => {
 		return;
 	}
 });
-
 function aptCommand(contextMsg) {
+	//if (fs.existsSync(pFile)) {
 
-	var pFile = ENV_VAR_BASE_DIR + "\\" + contextMsg.content.split(" ")[2] + '.js';
-	if (fs.existsSync(pFile)) {
-		contextMsg.channel.send("**[**Konsola**]** Pobieranie pakietu...");
+	let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+	let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/main/" + downloadNameNormalize + "-install.js";
+	let downloadDir = ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache";
+	contextMsg.channel.send("Get " + makeURL + "...");
+	if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
+
+	const wget = require('wget-improved');
+
+	var url = require("url");
+	var parsed = url.parse(makeURL);
+
+	contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
+	let download = wget.download(makeURL, downloadDir + "\\" + path.basename(parsed.pathname));
+	download.on('end', function (output) {
+		contextMsg.channel.send("Download complete.");
+
+		var pFile = downloadDir + "\\" + path.basename(parsed.pathname);
 
 		fs.readFile(pFile, function (err, data) {
 			if (err) throw err;
+			/*
 			if (data.includes('token')) {
-				contextMsg.channel.send("**[**Konsola**]** Pakiet próbuje wykorzystać prywatne części kodu. Instalacja zatrzymana.");
+				contextMsg.channel.send("Package tries to hack LinuxJS code and it's installation has been rejected.");
 				return;
 			}
 			else {
-				mod = require(pFile);
-				mod.Init(null, contextMsg, client);
-				contextMsg.channel.send("**[**Konsola**]** Zainstalowano pakiet.");
-			}
+			*/
+			mod = require(pFile);
+			mod.Init(null, contextMsg, client);
+			contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
+			contextMsg.channel.send("Done");
+			//}
 		});
+	});
+	download.on('error', function (err) {
+		contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
+	});
+
+	/*
 	} else {
 		// file does not exist
 		contextMsg.channel.send("**[**Konsola**]** Nie znaleziono pakietu o takiej nazwie.");
 	}
+	*/
 }
 
 // Old function for using git
@@ -162,7 +193,7 @@ function cdCommand(contextMsg) {
 			process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 		}
 		*/
-		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
+		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
 			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 			if (stat.isFile() != true) {
 				process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
