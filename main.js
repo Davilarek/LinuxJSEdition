@@ -1,7 +1,10 @@
 const Discord = require('discord.js')
 const client = new Discord.Client()
 var setTitle = require('console-title');
-const fs = require('fs')
+const fs = require('fs');
+const path = require('path');
+const wget = require('wget-improved');
+const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
@@ -89,11 +92,7 @@ function aptCommand(contextMsg) {
 		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
-		const wget = require('wget-improved');
-
-		var url = require("url");
 		var parsed = url.parse(makeURL);
-
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
 		let download = wget.download(makeURL, downloadDir + "\\" + path.basename(parsed.pathname));
 		download.on('end', function (output) {
@@ -141,7 +140,7 @@ function pwdCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + '\\VirtualDrive', '');
 	contextMsg.channel.send(pathWithoutDrive)
 }
-const path = require('path');
+
 function cdCommand(contextMsg) {
 	if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
 		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
@@ -217,7 +216,7 @@ function catCommand(contextMsg) {
 	}
 }
 function wgetCommand(contextMsg) {
-	const wget = require('wget-improved');
+
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
@@ -228,7 +227,7 @@ function wgetCommand(contextMsg) {
 		}
 		else {
 			if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-				var url = require("url");
+
 				var parsed = url.parse(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 
 				contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
@@ -393,7 +392,7 @@ function mvCommand(contextMsg) {
 }
 function touchCommand(contextMsg) {
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
+	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
