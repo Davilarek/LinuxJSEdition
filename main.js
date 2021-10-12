@@ -10,7 +10,6 @@ let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
 let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\dir.cfg").toString().split("\n");;
 let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + "\\token.txt").toString();
-let ENV_VAR_ALL_PACKAGES = null;
 let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache";
 client.on('ready', () => {
 	setTitle("Linux JS Host");
