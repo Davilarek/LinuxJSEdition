@@ -18,30 +18,25 @@ client.on('ready', () => {
 
 client.on("message", (message) => {
 	if (message.author.bot) return;
-
 	if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
 		fs.readdirSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache").forEach(file => {
 			console.log(file);
-			let pak = require(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache\\" + file);
-			pak.Init(null, message, client);
+			let package = require(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache\\" + file);
+			package.Init(null, message, client);
 		});
 		ENV_VAR_BOOT_COMPLETE = true;
 		return;
 	}
-
 	if (!ENV_VAR_BOOT_COMPLETE) return;
-
 	if (message.content.startsWith("$apt install")) {
 		aptCommand(message);
 		return;
 	}
-	/*
-	if (fs.existsSync(process.cwd() + "\\" + message.content.split("$")[1].split(" ")[0] + "-install.js")) {
-		eval(message.content.split("$")[1].split(" ")[0] + "Command(message)");
+	if (message.content.startsWith("$apt remove")) {
+		aptCommand(message);
 		return;
 	}
-	*/
 	if (message.content.startsWith("$ls")) {
 		lsCommand(message);
 		return;
@@ -88,67 +83,49 @@ client.on("message", (message) => {
 	}
 });
 function aptCommand(contextMsg) {
-	//if (fs.existsSync(pFile)) {
+	if (contextMsg.content.split(" ")[1] == "install") {
+		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+		let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/main/" + downloadNameNormalize + "-install.js";
+		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
+		contextMsg.channel.send("Get " + makeURL + "...");
+		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
+		const wget = require('wget-improved');
 
-	let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-	let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/main/" + downloadNameNormalize + "-install.js";
-	let downloadDir = ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache";
-	contextMsg.channel.send("Get " + makeURL + "...");
-	if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
+		var url = require("url");
+		var parsed = url.parse(makeURL);
 
-	const wget = require('wget-improved');
-
-	var url = require("url");
-	var parsed = url.parse(makeURL);
-
-	contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-	let download = wget.download(makeURL, downloadDir + "\\" + path.basename(parsed.pathname));
-	download.on('end', function (output) {
-		contextMsg.channel.send("Download complete.");
-
-		var pFile = downloadDir + "\\" + path.basename(parsed.pathname);
-
-		fs.readFile(pFile, function (err, data) {
-			if (err) throw err;
-			/*
-			if (data.includes('token')) {
-				contextMsg.channel.send("Package tries to hack LinuxJS code and it's installation has been rejected.");
-				return;
-			}
-			else {
-			*/
-			mod = require(pFile);
-			mod.Init(null, contextMsg, client);
-			contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
-			contextMsg.channel.send("Done");
-			//}
+		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
+		let download = wget.download(makeURL, downloadDir + "\\" + path.basename(parsed.pathname));
+		download.on('end', function (output) {
+			contextMsg.channel.send("Download complete.");
+			var pFile = downloadDir + "\\" + path.basename(parsed.pathname);
+			fs.readFile(pFile, function (err, data) {
+				if (err) throw err;
+				mod = require(pFile);
+				mod.Init(null, contextMsg, client);
+				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
+				contextMsg.channel.send("Done");
+			});
 		});
-	});
-	download.on('error', function (err) {
-		contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
-	});
-
-	/*
-	} else {
-		// file does not exist
-		contextMsg.channel.send("**[**Konsola**]** Nie znaleziono pakietu o takiej nazwie.");
+		download.on('error', function (err) {
+			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
+		});
 	}
-	*/
-}
-
-// Old function for using git
-function gitCommand(contextMsg) {
-	var pFile = ENV_VAR_BASE_DIR + '/git-install.js';
-	var git = require(pFile);
-	git.Init(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).split(" "), contextMsg);
+	if (contextMsg.content.split(" ")[1] == "remove") {
+		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+		let removeDir = ENV_VAR_APT_PROTECTED_DIR;
+		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
+		if (fs.existsSync(removeDir + "\\" + removeNameNormalize + "-install.js")) {
+			fs.rmSync(removeDir + "\\" + removeNameNormalize + "-install.js");
+			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
+		}
+		else {
+			contextMsg.channel.send(removeNameNormalize + " not found.");
+		}
+	}
 }
 
 function lsCommand(contextMsg) {
-	/*
-	var pFile = 'E:/LinuxJSEdition/ls-install.js';
-	var git = require(pFile);
-	git.Init(contextMsg);
-	*/
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '');
 	fs.readdir(process.cwd(), (err, files) => {
 		if (!files.length) {
@@ -167,32 +144,6 @@ function pwdCommand(contextMsg) {
 const path = require('path');
 function cdCommand(contextMsg) {
 	if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-		/*
-		if (path.basename(path.resolve(process.cwd())).toString() == 'VirtualDrive') {
-			
-			if (!contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes(".")) {
-				if (!contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("\\")) {
-					if (!contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("/")) {
-						process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-					}
-					else {
-						contextMsg.channel.send("Error: cannot `cd` into this directory.");
-					}
-				}
-				else {
-					contextMsg.channel.send("Error: cannot `cd` into this directory.");
-				}
-
-			}
-			else {
-				contextMsg.channel.send("Error: cannot `cd` into this directory.");
-			}
-			
-		}
-		else {
-			process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-		}
-		*/
 		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
 			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 			if (stat.isFile() != true) {
