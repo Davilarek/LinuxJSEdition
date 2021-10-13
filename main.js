@@ -243,7 +243,7 @@ function wgetCommand(contextMsg) {
 }
 function cpCommand(contextMsg) {
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
+	if (!path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
@@ -369,7 +369,7 @@ function rmCommand(contextMsg) {
 }
 function mvCommand(contextMsg) {
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2]))))) {
+	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2])))) || !path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
