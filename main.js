@@ -24,7 +24,7 @@ client.on("message", (message) => {
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR).forEach(file => {
 			console.log(file);
-			let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "file");
+			let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + file);
 			package.Init(null, message, client);
 		});
 		ENV_VAR_BOOT_COMPLETE = true;
@@ -87,7 +87,7 @@ client.on("message", (message) => {
 function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "install") {
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/main/" + downloadNameNormalize + "-install.js";
+		let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/testing/" + downloadNameNormalize + "-install.js";
 		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
@@ -101,7 +101,7 @@ function aptCommand(contextMsg) {
 				if (err) throw err;
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 				mod = require(pFile);
-				mod.Init(null, contextMsg, client);
+				mod.Init(null, contextMsg, ENV_VAR_BASE_DIR, client);
 				contextMsg.channel.send("Done");
 			});
 		});
