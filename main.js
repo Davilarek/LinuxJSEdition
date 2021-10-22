@@ -8,9 +8,9 @@ const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
-let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\dir.cfg").toString().split("\n");;
-let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + "\\token.txt").toString();
-let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache";
+let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");;
+let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
+let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "tmp" + path.sep + "cache";
 client.on('ready', () => {
 	setTitle("Linux JS Host");
 	console.log("Connected as " + client.user.tag)
@@ -22,9 +22,9 @@ client.on("message", (message) => {
 	if (message.author.bot) return;
 	if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
-		fs.readdirSync(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache").forEach(file => {
+		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR).forEach(file => {
 			console.log(file);
-			let package = require(ENV_VAR_BASE_DIR + "\\VirtualDrive\\tmp\\cache\\" + file);
+			let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "file");
 			package.Init(null, message, client);
 		});
 		ENV_VAR_BOOT_COMPLETE = true;
@@ -93,15 +93,15 @@ function aptCommand(contextMsg) {
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
 		var parsed = url.parse(makeURL);
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-		let download = wget.download(makeURL, downloadDir + "\\" + path.basename(parsed.pathname));
+		let download = wget.download(makeURL, downloadDir + path.sep + path.basename(parsed.pathname));
 		download.on('end', function (output) {
 			contextMsg.channel.send("Download complete.");
-			var pFile = downloadDir + "\\" + path.basename(parsed.pathname);
+			var pFile = downloadDir + path.sep + path.basename(parsed.pathname);
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
+				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 				mod = require(pFile);
 				mod.Init(null, contextMsg, client);
-				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 				contextMsg.channel.send("Done");
 			});
 		});
@@ -113,8 +113,8 @@ function aptCommand(contextMsg) {
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		let removeDir = ENV_VAR_APT_PROTECTED_DIR;
 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
-		if (fs.existsSync(removeDir + "\\" + removeNameNormalize + "-install.js")) {
-			fs.rmSync(removeDir + "\\" + removeNameNormalize + "-install.js");
+		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
+			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
 		}
 		else {
@@ -124,7 +124,7 @@ function aptCommand(contextMsg) {
 }
 
 function lsCommand(contextMsg) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '');
+	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	fs.readdir(process.cwd(), (err, files) => {
 		if (!files.length) {
 			contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
@@ -136,7 +136,7 @@ function lsCommand(contextMsg) {
 }
 
 function pwdCommand(contextMsg) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + '\\VirtualDrive', '');
+	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
 	contextMsg.channel.send(pathWithoutDrive)
 }
 
@@ -161,13 +161,13 @@ function cdCommand(contextMsg) {
 }
 
 function mkdirCommand(contextMsg) {
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("..") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("\\") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("/")) {
+	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("..") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith(path.sep) || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("/")) {
 		contextMsg.channel.send("Error: cannot create directory.");
 	}
 	else {
 		if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
 			fs.mkdirSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-			contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` created successfully.");
+			contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
 		}
 		else {
 			contextMsg.channel.send("Error: directory already exists.");
@@ -275,7 +275,7 @@ function rmdirCommand(contextMsg) {
 				fs.readdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), (err, files) => {
 					if (!files.length) {
 						fs.rmdirSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-						contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` deleted successfully.");
+						contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 					}
 					else {
 						contextMsg.channel.send("Error: directory is not empty.");
@@ -316,7 +316,7 @@ function rmCommand(contextMsg) {
 							fs.readdir(msgSplit[1], (err, files) => {
 								if (!files.length) {
 									fs.rmdirSync(msgSplit[1]);
-									contextMsg.channel.send("Directory `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` deleted successfully.");
+									contextMsg.channel.send("Directory `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 								}
 								else {
 									contextMsg.channel.send("Error: directory is not empty.");
@@ -337,7 +337,7 @@ function rmCommand(contextMsg) {
 						return;
 					}
 					fs.rmSync(msgSplit[1], { force: true });
-					contextMsg.channel.send("File `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` deleted successfully.");
+					contextMsg.channel.send("File `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 				}
 				if (msgSplit[0] == "-rf" || msgSplit[0] == "-fr" || msgSplit[0] == "-r") {
 					/*
@@ -347,7 +347,7 @@ function rmCommand(contextMsg) {
 					}
 					*/
 					fs.rmSync(msgSplit[1], { recursive: true, force: true });
-					contextMsg.channel.send("File(s) `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` deleted successfully.");
+					contextMsg.channel.send("File(s) `" + path.resolve(msgSplit[1]).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 				}
 			}
 		}
@@ -355,7 +355,7 @@ function rmCommand(contextMsg) {
 			if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
 				if (fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).isFile()) {
 					fs.rmSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-					contextMsg.channel.send("File `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + '\\VirtualDrive\\', '') + "` deleted successfully.");
+					contextMsg.channel.send("File `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 				}
 				else {
 					contextMsg.channel.send("Error: given path is not an file.");
