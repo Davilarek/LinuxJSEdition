@@ -4,6 +4,7 @@ VirtualDrive/home/*.*
 !VirtualDrive/home/empty.txt
 VirtualDrive/tmp/*.*
 !VirtualDrive/tmp/empty.txt
+VirtualDrive/tmp/cache
 VirtualDrive/bin/*.*
 !VirtualDrive/bin/empty.txt
 VirtualDrive/usr/*.*

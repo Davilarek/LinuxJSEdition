@@ -25,7 +25,7 @@ client.on("message", (message) => {
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR).forEach(file => {
 			console.log(file);
 			let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + file);
-			package.Init(null, message, client);
+			package.Init(null, message, ENV_VAR_BASE_DIR, client);
 		});
 		ENV_VAR_BOOT_COMPLETE = true;
 		return;
