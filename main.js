@@ -114,6 +114,7 @@ function aptCommand(contextMsg) {
 		let removeDir = ENV_VAR_APT_PROTECTED_DIR;
 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
+			//delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
 		}
