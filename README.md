@@ -25,7 +25,7 @@ LinuxJSEdition uses a number of open source projects to work properly:
 LinuxJSEdition requires [Node.js](https://nodejs.org/) v14+ to run.
 
 ##### Step 1.
-Download the repository, uzip, create new text file called token.txt and paste your bot token inside.
+Download the repository (or clone), unzip, create new text file called "token.txt" and paste your bot token inside.
 ##### Step 2.
 Install the dependencies and start the application.
 
