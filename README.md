@@ -19,7 +19,6 @@ LinuxJSEdition uses a number of open source projects to work properly:
 
 - [wget-improved] - wget command
 - [discord.js] - bot
-- [console-title] - fancy title
 
 ## Installation
 
