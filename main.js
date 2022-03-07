@@ -32,6 +32,10 @@ function register() {
 				}
 
 			});
+			cdCommand({
+				content: "$cd root",
+				channel: "null"
+			})
 			ENV_VAR_BOOT_COMPLETE = true;
 			return;
 		}
