@@ -10,10 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "discord.js": "^12.5.3",
-    "wget-improved": "^3.2.1"
+    "wget-improved": "^3.3.0"
   },
   "devDependencies": {
-    "@types/node": "^16.10.3"
+    "@types/node": "^16.11.26"
   },
   "repository": {
     "type": "git",
