@@ -1,6 +1,5 @@
 const Discord = require('discord.js')
 const client = new Discord.Client()
-var setTitle = require('console-title');
 const fs = require('fs');
 const path = require('path');
 const wget = require('wget-improved');
@@ -8,95 +7,120 @@ const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 let ENV_VAR_BASE_DIR = process.cwd();
-let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");;
+let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
-let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "tmp" + path.sep + "cache";
+let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 client.on('ready', () => {
-	setTitle("Linux JS Host");
 	console.log("Connected as " + client.user.tag)
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
+	register();
 });
 
-client.on("message", (message) => {
-	if (message.author.bot) return;
-	if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
-		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
-		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR).forEach(file => {
-			console.log(file);
-			let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + file);
-			package.Init(null, message.channel, ENV_VAR_BASE_DIR, client);
-		});
-		ENV_VAR_BOOT_COMPLETE = true;
-		return;
-	}
-	if (!ENV_VAR_BOOT_COMPLETE) return;
-	if (message.content.startsWith("$apt install")) {
-		aptCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$apt remove")) {
-		aptCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$ls")) {
-		lsCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$pwd")) {
-		pwdCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$cd")) {
-		cdCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$mkdir")) {
-		mkdirCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$cat")) {
-		catCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$wget")) {
-		wgetCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$cp")) {
-		cpCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$rmdir")) {
-		rmdirCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$rm")) {
-		rmCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$mv")) {
-		mvCommand(message);
-		return;
-	}
-	if (message.content.startsWith("$touch")) {
-		touchCommand(message);
-		return;
-	}
-});
+function register() {
+	client.on("message", (message) => {
+		if (message.author.bot) return;
+		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
+			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
+			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+				console.log(file);
+				try {
+					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client);
+				} catch (error) {
+					message.channel.send("An unexpected error occured while trying to run package: " + file);
+				}
+
+			});
+			ENV_VAR_BOOT_COMPLETE = true;
+			return;
+		}
+		if (!ENV_VAR_BOOT_COMPLETE) return;
+		if (message.content.startsWith("$apt install")) {
+			aptCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$apt remove")) {
+			aptCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$ls")) {
+			lsCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$pwd")) {
+			pwdCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$cd")) {
+			cdCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$mkdir")) {
+			mkdirCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$cat")) {
+			catCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$wget")) {
+			wgetCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$cp")) {
+			cpCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$rmdir")) {
+			rmdirCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$rm")) {
+			rmCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$mv")) {
+			mvCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$touch")) {
+			touchCommand(message);
+			return;
+		}
+	});
+}
 function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "install") {
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		let makeURL = "https://raw.githubusercontent.com/Davilarek/apt-repo/testing/" + downloadNameNormalize + "-install.js";
+		contextMsg.channel.send("Reading config...");
+		let branchName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
+		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
+		let gitUrlhName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+		let makeURL = gitUrlhName + branchName + "/" + downloadNameNormalize + "-install.js";
 		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
 		var parsed = url.parse(makeURL);
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-		let download = wget.download(makeURL, downloadDir + path.sep + path.basename(parsed.pathname));
+		let download = null
+		if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
+		}
+		else {
+			download = wget.download(makeURL, downloadDir + path.sep + path.basename(parsed.pathname));
+		}
 		download.on('end', function (output) {
 			contextMsg.channel.send("Download complete.");
-			var pFile = downloadDir + path.sep + path.basename(parsed.pathname);
+			var pFile = null
+			if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
+				console.log("t1");
+			}
+			else {
+				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
+				console.log("t2");
+			}
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
@@ -111,12 +135,20 @@ function aptCommand(contextMsg) {
 	}
 	if (contextMsg.content.split(" ")[1] == "remove") {
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		let removeDir = ENV_VAR_APT_PROTECTED_DIR;
+		let removeDir = null
+		if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
+		}
+		else {
+			removeDir = ENV_VAR_APT_PROTECTED_DIR;
+		}
 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
 			//delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
+			client.removeAllListeners("message");
+			register();
 		}
 		else {
 			contextMsg.channel.send(removeNameNormalize + " not found.");
@@ -201,7 +233,7 @@ function catCommand(contextMsg) {
 						var str = output;
 						for (let i = 0; i < str.length; i += 2000) {
 							const toSend = str.substring(i, Math.min(str.length, i + 2000));
-							contextMsg.channel.send(toSend);
+							contextMsg.channel.send("```" + toSend + "```");
 						}
 					});
 				}
@@ -221,7 +253,6 @@ function wgetCommand(contextMsg) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-
 		if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == "$wget") {
 			contextMsg.channel.send("Error: link not specified.");
 		}

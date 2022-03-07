@@ -9,7 +9,6 @@
   "author": "Davilarek",
   "license": "MIT",
   "dependencies": {
-    "console-title": "^1.1.0",
     "discord.js": "^12.5.3",
     "wget-improved": "^3.2.1"
   },

@@ -11,8 +11,11 @@ VirtualDrive/usr/*.*
 !VirtualDrive/usr/empty.txt
 VirtualDrive/root/*.*
 !VirtualDrive/root/empty.txt
+!VirtualDrive/root/.config
 VirtualDrive/etc/*.*
 !VirtualDrive/etc/empty.txt
+VirtualDrive/bin/autorun/*.*
+!VirtualDrive/bin/autorun/empty.txt
 git-install.js
 jakis-sus-pakiet.js
 node_modules
