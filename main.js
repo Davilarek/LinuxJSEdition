@@ -170,6 +170,10 @@ function lsCommand(contextMsg) {
 
 function pwdCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
+	if (pathWithoutDrive == "")
+	{
+		pathWithoutDrive = "\\";
+	}
 	contextMsg.channel.send(pathWithoutDrive)
 }
 
