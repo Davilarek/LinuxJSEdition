@@ -92,6 +92,14 @@ function register() {
 			touchCommand(message);
 			return;
 		}
+		if (message.content.startsWith("$js")) {
+			jsCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$cmdlist")) {
+			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`");
+			return;
+		}
 	});
 }
 function aptCommand(contextMsg) {
@@ -153,6 +161,14 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
 			client.removeAllListeners("message");
 			register();
+			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+				try {
+					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+				} catch (error) {
+					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
+				}
+			});
 		}
 		else {
 			contextMsg.channel.send(removeNameNormalize + " not found.");
@@ -174,8 +190,7 @@ function lsCommand(contextMsg) {
 
 function pwdCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
-	if (pathWithoutDrive == "")
-	{
+	if (pathWithoutDrive == "") {
 		pathWithoutDrive = "\\";
 	}
 	contextMsg.channel.send(pathWithoutDrive)
@@ -444,4 +459,21 @@ function touchCommand(contextMsg) {
 		}
 	}
 }
+function jsCommand(contextMsg) {
+	contextMsg.channel.send("Please note that this command is not supported and I do not take responsibility for any damage caused by using this command.");
+	let filenameBase = contextMsg.content.split(" ")[1];
+	let pFile = ENV_VAR_APT_PROTECTED_DIR + path.sep + filenameBase;
+
+	if (!fs.existsSync(pFile) || !fs.statSync(pFile).isFile()) { return; }
+	contextMsg.channel.send("Setting up \"" + filenameBase + "\"...");
+	try {
+		mod = require(pFile);
+		contextMsg.channel.send("Executing \"" + filenameBase + "\"...");
+		mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+		contextMsg.channel.send("Done");
+	} catch (error) {
+		contextMsg.channel.send("Cannot execute \"" + filenameBase + "\".");
+	}
+}
+
 client.login(ENV_VAR_BOT_TOKEN);
