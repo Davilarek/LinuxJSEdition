@@ -48,6 +48,10 @@ function register() {
 			aptCommand(message);
 			return;
 		}
+		if (message.content.startsWith("$apt update")) {
+			aptCommand(message);
+			return;
+		}
 		if (message.content.startsWith("$ls")) {
 			lsCommand(message);
 			return;
@@ -163,7 +167,7 @@ function aptCommand(contextMsg) {
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				try {
-					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
 				} catch (error) {
 					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
@@ -174,6 +178,47 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send(removeNameNormalize + " not found.");
 		}
 	}
+	if (contextMsg.content.split(" ")[1] == "update") {
+		let finished = false;
+		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+			let branchName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
+			//contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
+			let gitUrlhName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+			let makeURL = gitUrlhName + branchName + "/" + file;
+			let download = wget.download(makeURL, ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+			download.on('end', function (output) {
+				let package = requireUncached(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+				let packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+				if (package.Version != packageOld.Version) {
+					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
+					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
+					contextMsg.channel.send("Done.");
+					finished = true;
+				}
+			});
+			download.on('error', function (err) {
+				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
+			});
+		});
+		if (finished) {
+			client.removeAllListeners("message");
+			register();
+			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+				try {
+					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+				} catch (error) {
+					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
+				}
+			});
+		}
+	}
+}
+
+function requireUncached(module) {
+	delete require.cache[require.resolve(module)];
+	return require(module);
 }
 
 function lsCommand(contextMsg) {
