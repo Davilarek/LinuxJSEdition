@@ -140,7 +140,7 @@ function aptCommand(contextMsg) {
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
-				mod = require(pFile);
+				mod = requireUncached(pFile);
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
 				contextMsg.channel.send("Done");
 			});
