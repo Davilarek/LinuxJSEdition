@@ -26,6 +26,7 @@ function register() {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				console.log(file);
+				if (file == "empty.txt") { return; }
 				try {
 					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client);
@@ -173,6 +174,7 @@ function aptCommand(contextMsg) {
 			client.removeAllListeners("message");
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+				if (file == "empty.txt") { return; }
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
@@ -213,6 +215,7 @@ function aptCommand(contextMsg) {
 			client.removeAllListeners("message");
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+				if (file == "empty.txt") { return; }
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
