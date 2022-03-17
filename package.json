@@ -2,9 +2,9 @@
   "name": "linuxjsedition",
   "version": "1.0.0",
   "description": "A basic Linux simulator bot for Discord.",
-  "main": "main.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node main"
+    "start": "node index"
   },
   "author": "Davilarek",
   "license": "MIT",
