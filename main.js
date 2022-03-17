@@ -10,6 +10,7 @@ let ENV_VAR_BASE_DIR = process.cwd();
 let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
+
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
 	client.user.setActivity("Linux JS Edition testing...");
@@ -111,6 +112,7 @@ function register() {
 		}
 	});
 }
+
 function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "install") {
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -281,6 +283,7 @@ function mkdirCommand(contextMsg) {
 		}
 	}
 }
+
 function catCommand(contextMsg) {
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
@@ -321,6 +324,7 @@ function catCommand(contextMsg) {
 		}
 	}
 }
+
 function wgetCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
@@ -347,6 +351,7 @@ function wgetCommand(contextMsg) {
 		}
 	}
 }
+
 function cpCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
@@ -369,6 +374,7 @@ function cpCommand(contextMsg) {
 		}
 	}
 }
+
 function rmdirCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
@@ -398,7 +404,6 @@ function rmdirCommand(contextMsg) {
 		}
 	}
 }
-
 
 function rmCommand(contextMsg) {
 
@@ -473,6 +478,7 @@ function rmCommand(contextMsg) {
 		}
 	}
 }
+
 function mvCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2])))) || !path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
@@ -495,6 +501,7 @@ function mvCommand(contextMsg) {
 		}
 	}
 }
+
 function touchCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
@@ -510,6 +517,7 @@ function touchCommand(contextMsg) {
 		}
 	}
 }
+
 function jsCommand(contextMsg) {
 	contextMsg.channel.send("Please note that this command is not supported and I do not take responsibility for any damage caused by using this command.");
 	let filenameBase = contextMsg.content.split(" ")[1];
@@ -527,15 +535,8 @@ function jsCommand(contextMsg) {
 	}
 }
 
-/**
- * Deletes a node module and all associated children
- * from node require cache
- * @param {string} moduleName The name of the module or 
- *                            absolute/relative path to it
- */
 function deleteModule(moduleName) {
-	var solvedName = require.resolve(moduleName),
-		nodeModule = require.cache[solvedName];
+	var solvedName = require.resolve(moduleName), nodeModule = require.cache[solvedName];
 	if (nodeModule) {
 		for (var i = 0; i < nodeModule.children.length; i++) {
 			var child = nodeModule.children[i];
@@ -544,11 +545,10 @@ function deleteModule(moduleName) {
 		delete require.cache[solvedName];
 	}
 }
+
 const getAllFiles = function (dirPath, arrayOfFiles) {
 	files = fs.readdirSync(dirPath)
-
 	arrayOfFiles = arrayOfFiles || []
-
 	files.forEach(function (file) {
 		if (fs.statSync(dirPath + path.sep + file).isDirectory()) {
 			arrayOfFiles = getAllFiles(dirPath + path.sep + file, arrayOfFiles)
@@ -556,25 +556,22 @@ const getAllFiles = function (dirPath, arrayOfFiles) {
 			arrayOfFiles.push(path.join(dirPath, path.sep, file))
 		}
 	})
-
 	return arrayOfFiles
 }
+
 function closeMain() {
 	client.removeAllListeners("message");
-
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
 		try {
 			deleteModule(f);
 		} catch (error) {
 			console.log("skip" + f);
 		}
-
 	});
-
 	client.destroy();
 }
 
-function UpgradeOS(){
+function UpgradeOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Upgrade();
