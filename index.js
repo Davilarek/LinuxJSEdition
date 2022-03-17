@@ -29,3 +29,8 @@ module.exports.Upgrade = function () {
         mainFile = requireUncached("./main.js");
     })
 };
+
+module.exports.Reboot = function () {
+    delete require.cache[require.resolve("./main.js")];
+    mainFile = requireUncached("./main.js");
+};

@@ -104,11 +104,15 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$cmdlist")) {
-			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`");
+			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
 			return;
 		}
 		if (message.content.startsWith("$upgrade-os")) {
 			UpgradeOS();
+			return;
+		}
+		if (message.content.startsWith("$reboot")) {
+			RebootOS();
 			return;
 		}
 	});
@@ -578,6 +582,12 @@ function UpgradeOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Upgrade();
+}
+
+function RebootOS() {
+	process.chdir(ENV_VAR_BASE_DIR);
+	closeMain();
+	require.cache[require.resolve("./index.js")].exports.Reboot();
 }
 
 module.exports.CloseAndUpgrade = function () {
