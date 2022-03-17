@@ -16,9 +16,12 @@ VirtualDrive/etc/*.*
 !VirtualDrive/etc/empty.txt
 VirtualDrive/bin/autorun/*.*
 !VirtualDrive/bin/autorun/empty.txt
+VirtualDrive/tmp/packageCache/*.*
+!VirtualDrive/tmp/packageCache/empty.txt
 git-install.js
 jakis-sus-pakiet.js
 node_modules
 Lost&Found
 token.txt
 workspace.code-workspace
+1main.js

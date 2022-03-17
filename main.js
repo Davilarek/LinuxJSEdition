@@ -101,7 +101,11 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$cmdlist")) {
-			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`");
+			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`");
+			return;
+		}
+		if (message.content.startsWith("$upgrade-os")) {
+			CloseAndUpgrade();
 			return;
 		}
 	});
@@ -521,5 +525,57 @@ function jsCommand(contextMsg) {
 		contextMsg.channel.send("Cannot execute \"" + filenameBase + "\".");
 	}
 }
+
+/**
+ * Deletes a node module and all associated children
+ * from node require cache
+ * @param {string} moduleName The name of the module or 
+ *                            absolute/relative path to it
+ */
+function deleteModule(moduleName) {
+	var solvedName = require.resolve(moduleName),
+		nodeModule = require.cache[solvedName];
+	if (nodeModule) {
+		for (var i = 0; i < nodeModule.children.length; i++) {
+			var child = nodeModule.children[i];
+			deleteModule(child.filename);
+		}
+		delete require.cache[solvedName];
+	}
+}
+const getAllFiles = function (dirPath, arrayOfFiles) {
+	files = fs.readdirSync(dirPath)
+
+	arrayOfFiles = arrayOfFiles || []
+
+	files.forEach(function (file) {
+		if (fs.statSync(dirPath + path.sep + file).isDirectory()) {
+			arrayOfFiles = getAllFiles(dirPath + path.sep + file, arrayOfFiles)
+		} else {
+			arrayOfFiles.push(path.join(dirPath, path.sep, file))
+		}
+	})
+
+	return arrayOfFiles
+}
+function closeMain() {
+	client.removeAllListeners("message");
+
+	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
+		try {
+			deleteModule(f);
+		} catch (error) {
+			console.log("skip" + f);
+		}
+
+	});
+
+	client.destroy();
+}
+
+module.exports.CloseAndUpgrade = function () {
+	closeMain();
+	require.cache[require.resolve("./index.js")].exports.Upgrade();
+};
 
 client.login(ENV_VAR_BOT_TOKEN);
