@@ -22,7 +22,7 @@ function requireUncached(module) {
 }
 
 module.exports.Upgrade = function () {
-    mainFile.CloseAndUpgrade();
+    //mainFile.CloseAndUpgrade();
     delete require.cache[require.resolve("./main.js")];
 
     download("https://raw.githubusercontent.com/Davilarek/LinuxJSEdition/master/main.js", "./main.js", function () {

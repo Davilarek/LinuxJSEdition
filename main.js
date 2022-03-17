@@ -20,6 +20,7 @@ client.on('ready', () => {
 function register() {
 	client.on("message", (message) => {
 		if (message.author.bot) return;
+		console.log("test");
 		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
@@ -105,7 +106,7 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$upgrade-os")) {
-			CloseAndUpgrade();
+			UpgradeOS();
 			return;
 		}
 	});
@@ -573,9 +574,13 @@ function closeMain() {
 	client.destroy();
 }
 
-module.exports.CloseAndUpgrade = function () {
+function UpgradeOS(){
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Upgrade();
+}
+
+module.exports.CloseAndUpgrade = function () {
+	UpgradeOS();
 };
 
 client.login(ENV_VAR_BOT_TOKEN);
