@@ -33,7 +33,7 @@ Install the dependencies and start the application.
 ```sh
 cd LinuxJSEdition
 npm i
-node main
+node .
 ```
 
 ##### Step 3.
