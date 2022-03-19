@@ -18,6 +18,8 @@ VirtualDrive/bin/autorun/*.*
 !VirtualDrive/bin/autorun/empty.txt
 VirtualDrive/tmp/packageCache/*.*
 !VirtualDrive/tmp/packageCache/empty.txt
+.vscode/*/*.*
+.vscode/*.*
 git-install.js
 jakis-sus-pakiet.js
 node_modules

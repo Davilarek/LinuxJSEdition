@@ -10,6 +10,12 @@ let ENV_VAR_BASE_DIR = process.cwd();
 let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
+let ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
+let ENV_VAR_NULL_CHANNEL = {
+	send: function (content) {
+		content = null;
+	}
+};
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
@@ -18,6 +24,9 @@ client.on('ready', () => {
 	register();
 });
 
+/**
+ * (Re-)register all commands.
+ */
 function register() {
 	client.on("message", (message) => {
 		if (message.author.bot) return;
@@ -118,13 +127,17 @@ function register() {
 	});
 }
 
+/**
+ * This function is used to install, remove or update packages.
+ * @param contextMsg - The message that triggered the command.
+ */
 function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "install") {
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		contextMsg.channel.send("Reading config...");
-		let branchName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
+		let branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		let gitUrlhName = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+		let gitUrlhName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
 		let makeURL = gitUrlhName + branchName + "/" + downloadNameNormalize + "-install.js";
 		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
@@ -132,7 +145,7 @@ function aptCommand(contextMsg) {
 		var parsed = url.parse(makeURL);
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
 		let download = null
-		if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
 		}
 		else {
@@ -141,7 +154,7 @@ function aptCommand(contextMsg) {
 		download.on('end', function (output) {
 			contextMsg.channel.send("Download complete.");
 			var pFile = null
-			if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+			if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
 				console.log("t1");
 			}
@@ -164,7 +177,7 @@ function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "remove") {
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		let removeDir = null
-		if (fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config").toString().split("\n")[0].split('=')[1] == "true") {
+		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
 		}
 		else {
@@ -231,11 +244,20 @@ function aptCommand(contextMsg) {
 	}
 }
 
+/**
+ * *This function deletes the cached version of the module and then returns the module. 
+ * This is useful if you want to force a refresh of the module.*
+ * @param {string} module - The name of the module to be required.
+ */
 function requireUncached(module) {
 	delete require.cache[require.resolve(module)];
 	return require(module);
 }
 
+/**
+ * It lists the files in the current directory.
+ * @param contextMsg - The message that triggered the command.
+ */
 function lsCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	fs.readdir(process.cwd(), (err, files) => {
@@ -248,6 +270,10 @@ function lsCommand(contextMsg) {
 	});
 }
 
+/**
+ * It returns the current working directory.
+ * @param contextMsg - The message that triggered the command.
+ */
 function pwdCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
 	if (pathWithoutDrive == "") {
@@ -256,6 +282,10 @@ function pwdCommand(contextMsg) {
 	contextMsg.channel.send(pathWithoutDrive)
 }
 
+/**
+ * Change the current working directory to the given path
+ * @param contextMsg - The message that triggered the command.
+ */
 function cdCommand(contextMsg) {
 	if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
 		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
@@ -276,6 +306,10 @@ function cdCommand(contextMsg) {
 	}
 }
 
+/**
+ * Create a directory.
+ * @param contextMsg - The message object that triggered the command.
+ */
 function mkdirCommand(contextMsg) {
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("..") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith(path.sep) || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("/")) {
 		contextMsg.channel.send("Error: cannot create directory.");
@@ -291,6 +325,12 @@ function mkdirCommand(contextMsg) {
 	}
 }
 
+/**
+ * It takes a path as an argument, checks if it's a file, and if it is, it checks if it's empty or too
+ * big to cat. If it is, it sends an error message. If it isn't, it reads the file and sends it in
+ * chunks of 2000 characters
+ * @param contextMsg - The message object that triggered the command.
+ */
 function catCommand(contextMsg) {
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
@@ -332,6 +372,10 @@ function catCommand(contextMsg) {
 	}
 }
 
+/**
+ * Downloads a file from a URL to a specified path
+ * @param contextMsg - The message object that triggered the command.
+ */
 function wgetCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
@@ -359,6 +403,10 @@ function wgetCommand(contextMsg) {
 	}
 }
 
+/**
+ * Copy a file from one path to another
+ * @param contextMsg - The message object that triggered the command.
+ */
 function cpCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
@@ -382,6 +430,10 @@ function cpCommand(contextMsg) {
 	}
 }
 
+/**
+ * It deletes an empty directory.
+ * @param contextMsg - The message object that triggered the command.
+ */
 function rmdirCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
@@ -412,6 +464,10 @@ function rmdirCommand(contextMsg) {
 	}
 }
 
+/**
+ * It deletes a file or directory.
+ * @param contextMsg - The message object that triggered the command.
+ */
 function rmCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
@@ -486,6 +542,10 @@ function rmCommand(contextMsg) {
 	}
 }
 
+/**
+ * Move a file from one location to another
+ * @param contextMsg - The message object that triggered the command.
+ */
 function mvCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2])))) || !path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
@@ -509,6 +569,10 @@ function mvCommand(contextMsg) {
 	}
 }
 
+/**
+ * Creates a file at the specified path
+ * @param contextMsg - The message object that triggered the command.
+ */
 function touchCommand(contextMsg) {
 
 	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
@@ -525,6 +589,12 @@ function touchCommand(contextMsg) {
 	}
 }
 
+/**
+ * It loads a JavaScript file from the protected directory, executes it, and then sends a message to
+ * the channel
+ * @param contextMsg - The message that triggered the command.
+ * @returns The return value is the result of the command.
+ */
 function jsCommand(contextMsg) {
 	contextMsg.channel.send("Please note that this command is not supported and I do not take responsibility for any damage caused by using this command.");
 	let filenameBase = contextMsg.content.split(" ")[1];
@@ -542,6 +612,10 @@ function jsCommand(contextMsg) {
 	}
 }
 
+/**
+ * Delete the module from the cache and recursively delete all of its children
+ * @param moduleName - The name of the module to delete.
+ */
 function deleteModule(moduleName) {
 	var solvedName = require.resolve(moduleName), nodeModule = require.cache[solvedName];
 	if (nodeModule) {
@@ -553,19 +627,28 @@ function deleteModule(moduleName) {
 	}
 }
 
-const getAllFiles = function (dirPath, arrayOfFiles) {
-	files = fs.readdirSync(dirPath)
-	arrayOfFiles = arrayOfFiles || []
+/**
+ * Get all the files in a directory and its subdirectories
+ * @param dirPath - The path to the directory you want to search.
+ * @param arrayOfFiles - An array of files to be returned.
+ * @returns An array of all the files in the directory.
+ */
+function getAllFiles(dirPath, arrayOfFiles) {
+	files = fs.readdirSync(dirPath);
+	arrayOfFiles = arrayOfFiles || [];
 	files.forEach(function (file) {
 		if (fs.statSync(dirPath + path.sep + file).isDirectory()) {
-			arrayOfFiles = getAllFiles(dirPath + path.sep + file, arrayOfFiles)
+			arrayOfFiles = getAllFiles(dirPath + path.sep + file, arrayOfFiles);
 		} else {
-			arrayOfFiles.push(path.join(dirPath, path.sep, file))
+			arrayOfFiles.push(path.join(dirPath, path.sep, file));
 		}
-	})
-	return arrayOfFiles
+	});
+	return arrayOfFiles;
 }
 
+/**
+ * * Close the main process and kill all modules
+ */
 function closeMain() {
 	client.removeAllListeners("message");
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
@@ -578,12 +661,21 @@ function closeMain() {
 	client.destroy();
 }
 
+/**
+ * * Navigate to the base directory of the environment variable.
+ * * Close the main process.
+ * * Run the `Upgrade` function from the `index.js` file
+ */
 function UpgradeOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Upgrade();
 }
-
+/**
+ * * Navigate to the base directory of the environment variable.
+ * * Close the main process.
+ * * Run the `Reboot` function from the `index.js` file
+ */
 function RebootOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
