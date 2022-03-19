@@ -249,7 +249,7 @@ function aptCommand(contextMsg) {
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 			let makeURL = gitUrlhName + branchName + "/" + file;
 			let download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
-			contextMsg.channel.send("Check " + file.replace("-install.js", ""));
+			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
 			download.on('end', function (output) {
 				let package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
 				let packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
