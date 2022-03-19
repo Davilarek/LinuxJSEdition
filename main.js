@@ -208,6 +208,7 @@ function aptCommand(contextMsg) {
 		let finished = false;
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 			let branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
 			//contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
