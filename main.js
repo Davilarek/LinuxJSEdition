@@ -462,7 +462,7 @@ function catCommand(contextMsg) {
 						var str = output;
 						for (let i = 0; i < str.length; i += 2000) {
 							const toSend = str.substring(i, Math.min(str.length, i + 2000));
-							contextMsg.channel.send("```" + toSend + "```");
+							contextMsg.channel.send("```\n" + toSend + "\n```");
 						}
 					});
 				}
