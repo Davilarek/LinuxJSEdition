@@ -197,15 +197,16 @@ function aptCommand(contextMsg) {
 				mod = requireUncached(pFile);
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
 				updatedCount += 1;
-				contextMsg.channel.send("Done");
+				contextMsg.channel.send("Done").then(v => {
+					var end = new Date().getTime();
+					var time = end - start;
+					contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+				});
 			});
 		});
 		download.on('error', function (err) {
 			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
 		});
-		var end = new Date().getTime();
-		var time = end - start;
-		contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
 	}
 
 
@@ -225,7 +226,7 @@ function aptCommand(contextMsg) {
 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
 			//delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
-			contextMsg.channel.send(removeNameNormalize + " removed successfully.");
+
 			client.removeAllListeners("message");
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
@@ -238,13 +239,15 @@ function aptCommand(contextMsg) {
 				}
 			});
 			updatedCount += 1;
+			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
+				var end = new Date().getTime();
+				var time = end - start;
+				contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+			});
 		}
 		else {
 			contextMsg.channel.send(removeNameNormalize + " not found.");
 		}
-		var end = new Date().getTime();
-		var time = end - start;
-		contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
 	}
 
 
@@ -292,9 +295,11 @@ function aptCommand(contextMsg) {
 				}
 			});
 		}
-		var end = new Date().getTime();
-		var time = end - start;
-		contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+		contextMsg.channel.send("Done").then(v => {
+			var end = new Date().getTime();
+			var time = end - start;
+			contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+		});
 	}
 }
 
