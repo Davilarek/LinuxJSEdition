@@ -20,10 +20,6 @@ VirtualDrive/tmp/packageCache/*.*
 !VirtualDrive/tmp/packageCache/empty.txt
 .vscode/*/*.*
 .vscode/*.*
-git-install.js
-jakis-sus-pakiet.js
 node_modules
-Lost&Found
 token.txt
 workspace.code-workspace
-1main.js
