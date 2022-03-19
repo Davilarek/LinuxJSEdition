@@ -61,7 +61,7 @@ async function getAllRepoPackages() {
 	for (let i = 0; i < tree.length; i++) {
 		if (path.extname(tree[i].path) != ".js") { continue; }
 		//console.log(tree[i].path);
-		packages.push(tree[i].path);
+		packages.push(tree[i].path.replace("-install.js", ""));
 	}
 	return packages;
 }
