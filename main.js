@@ -19,6 +19,7 @@ const ENV_VAR_NULL_CHANNEL = {
 		content = null;
 	}
 };
+const ENV_VAR_VERSION = httpGet("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1")
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
@@ -26,6 +27,14 @@ client.on('ready', () => {
 	process.chdir('VirtualDrive');
 	register();
 });
+
+function httpGet(url)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.send( null );
+    return xmlHttp.getResponseHeader("Link");
+}
 
 /**
  * (Re-)register all commands.
@@ -37,7 +46,7 @@ function register() {
 
 		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
 		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
-			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
+			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + ENV_VAR_VERSION + "-amd64`");
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				console.log(file);
 				if (file == "empty.txt") { return; }
