@@ -444,8 +444,7 @@ function catCommand(contextMsg) {
 		if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
 			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 			console.log(stat.size);
-			if (stat.isFile() == true) {
-
+			if (stat.isFile()) {
 				if (stat.size == 0) {
 					contextMsg.channel.send("`file is empty`");
 				}
