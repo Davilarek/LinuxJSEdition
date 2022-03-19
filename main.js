@@ -29,6 +29,8 @@ client.on('ready', () => {
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
 	register();
+
+	getAllRepoPackages();
 });
 
 /**
@@ -42,6 +44,22 @@ async function getVersion() {
 	var a = await str;
 	let result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0]
 	return result;
+}
+
+/**
+ * Get all the packages from the apt-repo repository
+ */
+async function getAllRepoPackages() {
+	const bent = require('bent')
+	const getHeaders = bent('https://api.github.com')
+	let str = getHeaders("/repos/Davilarek/apt-repo/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
+	var a = await str;
+	var tree = a.tree;
+	var packages = [];
+	for (let i = 0; i < tree; i++) {
+		//console.log(tree[i].path);
+		packages.push(tree[i].path);
+	}
 }
 
 /**
@@ -300,6 +318,9 @@ function aptCommand(contextMsg) {
 			var time = end - start;
 			contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
 		});
+	}
+	if (contextMsg.content.split(" ")[1] == "list-all") {
+
 	}
 }
 
