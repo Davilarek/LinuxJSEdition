@@ -6,12 +6,15 @@ const wget = require('wget-improved');
 const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
-let ENV_VAR_BASE_DIR = process.cwd();
-let ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
-let ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
-let ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
-let ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
-let ENV_VAR_NULL_CHANNEL = {
+const ENV_VAR_BASE_DIR = process.cwd();
+const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
+const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
+const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
+const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
+const ENV_VAR_NULL_CHANNEL = {
+	/** 
+	 * @param {string} content
+	*/
 	send: function (content) {
 		content = null;
 	}
@@ -31,6 +34,8 @@ function register() {
 	client.on("message", (message) => {
 		if (message.author.bot) return;
 		//console.log("test");
+
+		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
 		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1.14.5-amd64`");
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
@@ -46,12 +51,15 @@ function register() {
 			});
 			cdCommand({
 				content: "$cd root",
-				channel: "null"
+				channel: ENV_VAR_NULL_CHANNEL
 			})
 			ENV_VAR_BOOT_COMPLETE = true;
 			return;
 		}
+
+		// bot isn't booted, go back
 		if (!ENV_VAR_BOOT_COMPLETE) return;
+
 		if (message.content.startsWith("$apt install")) {
 			aptCommand(message);
 			return;
@@ -132,6 +140,8 @@ function register() {
  * @param contextMsg - The message that triggered the command.
  */
 function aptCommand(contextMsg) {
+
+	/* This code is responsible for installing a package. */
 	if (contextMsg.content.split(" ")[1] == "install") {
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		contextMsg.channel.send("Reading config...");
@@ -156,11 +166,11 @@ function aptCommand(contextMsg) {
 			var pFile = null
 			if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
-				console.log("t1");
+				//console.log("t1");
 			}
 			else {
 				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
-				console.log("t2");
+				//console.log("t2");
 			}
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
@@ -174,6 +184,9 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
 		});
 	}
+
+
+	/* This code is responsible for removing a package from the system. */
 	if (contextMsg.content.split(" ")[1] == "remove") {
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		let removeDir = null
@@ -204,6 +217,9 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send(removeNameNormalize + " not found.");
 		}
 	}
+
+
+	/* The above code is a simple update script for the bot. It will download all packages from the repository and replace the old ones. */
 	if (contextMsg.content.split(" ")[1] == "update") {
 		let finished = false;
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
