@@ -1,5 +1,5 @@
-const Discord = require('discord.js')
-const client = new Discord.Client()
+const Discord = require('discord.js');
+const client = new Discord.Client();
 const fs = require('fs');
 const path = require('path');
 const wget = require('wget-improved');
