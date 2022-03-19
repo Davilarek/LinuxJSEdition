@@ -19,6 +19,7 @@ LinuxJSEdition uses a number of open source projects to work properly:
 
 - [wget-improved] - wget command
 - [discord.js] - bot
+- [bent] - get version number
 
 ## Installation
 
@@ -59,3 +60,4 @@ MIT
    [dill]: <https://github.com/joemccann/dillinger>
    [git-repo-url]: <https://github.com/joemccann/dillinger.git>
    [node.js]: <http://nodejs.org>
+   [bent] <https://github.com/mikeal/bent>
