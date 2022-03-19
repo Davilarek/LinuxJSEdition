@@ -260,6 +260,8 @@ function aptCommand(contextMsg) {
 					updatedCount += 1;
 					finished = true;
 				}
+				delete require.cache[BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)];
+				delete require.cache[ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file];
 			});
 			download.on('error', function (err) {
 				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
@@ -269,12 +271,11 @@ function aptCommand(contextMsg) {
 			client.removeAllListeners("message");
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-				if (file == "empty.txt") { return; }
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
 				} catch (error) {
-					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
+					//contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
 				}
 			});
 		}
