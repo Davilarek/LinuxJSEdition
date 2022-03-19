@@ -29,8 +29,6 @@ client.on('ready', () => {
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
 	register();
-
-	console.log(getAllRepoPackages());
 });
 
 /**
@@ -40,6 +38,7 @@ client.on('ready', () => {
 async function getVersion() {
 	const bent = require('bent')
 	const getHeaders = bent('https://api.github.com')
+	// you may want to change this
 	let str = getHeaders("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
 	var a = await str;
 	let result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0]
@@ -51,15 +50,20 @@ async function getVersion() {
  */
 async function getAllRepoPackages() {
 	const bent = require('bent')
-	const getHeaders = bent('https://api.github.com')
-	let str = getHeaders("/repos/Davilarek/apt-repo/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
+	const getJSON = bent('json')
+	var repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2]
+	//console.log(repoUrl);
+	let str = getJSON("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
 	var a = await str;
-	var tree = a.tree;
+	//console.log(a);
+	var tree = await a.tree;
 	var packages = [];
-	for (let i = 0; i < tree; i++) {
+	for (let i = 0; i < tree.length; i++) {
+		if (path.extname(tree[i].path) != ".js") { continue; }
 		//console.log(tree[i].path);
 		packages.push(tree[i].path);
 	}
+	return packages;
 }
 
 /**
@@ -104,6 +108,14 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$apt update")) {
+			aptCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$apt list-all")) {
+			aptCommand(message);
+			return;
+		}
+		if (message.content.startsWith("$apt help")) {
 			aptCommand(message);
 			return;
 		}
@@ -156,7 +168,7 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$cmdlist")) {
-			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
+			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
 			return;
 		}
 		if (message.content.startsWith("$upgrade-os")) {
@@ -319,8 +331,21 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
 		});
 	}
-	if (contextMsg.content.split(" ")[1] == "list-all") {
 
+
+	/* Send message with all packages in the repository. */
+	if (contextMsg.content.split(" ")[1] == "list-all") {
+		contextMsg.channel.send("Collecting data from repository...").then(v => {
+			getAllRepoPackages().then(v => {
+				contextMsg.channel.send(v.join("\n"));
+				contextMsg.channel.send("Done.");
+			});
+		})
+	}
+
+
+	if (contextMsg.content.split(" ")[1] == "help") {
+		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`");
 	}
 }
 
