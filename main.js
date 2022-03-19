@@ -240,6 +240,7 @@ function aptCommand(contextMsg) {
 	if (contextMsg.content.split(" ")[1] == "update") {
 		let finished = false;
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+		let updatedCount = 0;
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
@@ -255,6 +256,7 @@ function aptCommand(contextMsg) {
 					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
 					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
 					contextMsg.channel.send("Done.");
+					updatedCount += 1;
 					finished = true;
 				}
 			});
@@ -275,6 +277,7 @@ function aptCommand(contextMsg) {
 				}
 			});
 		}
+		contextMsg.channel.send(updatedCount + " package(s) were updated.");
 	}
 }
 
