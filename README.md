@@ -60,4 +60,4 @@ MIT
    [dill]: <https://github.com/joemccann/dillinger>
    [git-repo-url]: <https://github.com/joemccann/dillinger.git>
    [node.js]: <http://nodejs.org>
-   [bent] <https://github.com/mikeal/bent>
+   [bent]: <https://github.com/mikeal/bent>
