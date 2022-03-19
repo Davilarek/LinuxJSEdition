@@ -49,6 +49,13 @@ $apt install git
 
 ## Development
 Please report any bugs and security holes, when you find any.
+
+## Tips
+- If something doesn't work - try $reboot :)
+- Try out $apt list-all!
+- If youre looking for an text editor - download text-edit package!
+- You can find configuration file in /root/.config.
+
 ## License
 
 MIT
