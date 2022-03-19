@@ -30,7 +30,7 @@ client.on('ready', () => {
 	process.chdir('VirtualDrive');
 	register();
 
-	getAllRepoPackages();
+	console.log(getAllRepoPackages());
 });
 
 /**
