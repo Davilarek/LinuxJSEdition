@@ -19,7 +19,7 @@ const ENV_VAR_NULL_CHANNEL = {
 		content = null;
 	}
 };
-const ENV_VAR_VERSION = httpGet("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1")
+const ENV_VAR_VERSION = httpGet("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1");
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
@@ -28,12 +28,14 @@ client.on('ready', () => {
 	register();
 });
 
-function httpGet(url)
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url, false );
-    xmlHttp.send( null );
-    return xmlHttp.getResponseHeader("Link");
+function httpGet(url) {
+	const https = require('https');
+
+	https.get(url, (resp) => {
+		return resp.headers;
+	}).on("error", (err) => {
+		console.log("Error: " + err.message);
+	});
 }
 
 /**
