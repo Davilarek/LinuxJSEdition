@@ -19,7 +19,10 @@ const ENV_VAR_NULL_CHANNEL = {
 		content = null;
 	}
 };
-const ENV_VAR_VERSION = httpGet("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1");
+let ENV_VAR_VERSION = 0;
+httpGet("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1").then(v => {
+	ENV_VAR_VERSION = v;
+});
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
@@ -28,14 +31,18 @@ client.on('ready', () => {
 	register();
 });
 
-function httpGet(url) {
-	const https = require('https');
+async function httpGet(url) {
+	const bent = require('bent')
+	const getJSON = bent('https://api.github.com')
+	let str = getJSON("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
+	var a = await str;
+	let result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0]
+	//console.log(result);
+	return result;
 
-	https.get(url, (resp) => {
-		return resp.headers;
-	}).on("error", (err) => {
-		console.log("Error: " + err.message);
-	});
+	// let obj = getJSON(url, null, { 'User-Agent': 'request' }).then(a => {
+	// 	console.log(a);
+	// })
 }
 
 /**
