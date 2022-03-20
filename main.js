@@ -9,7 +9,8 @@ let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 const ENV_VAR_LIST = {
-	"HOME": ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root"
+	"$HOME": "/root",
+	"~": "/root"
 }
 const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
@@ -395,36 +396,75 @@ function pwdCommand(contextMsg) {
  * @param contextMsg - The message that triggered the command.
  */
 function cdCommand(contextMsg) {
-	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$")) {
-		if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
-			const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+	// if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("~")) {
+	// 	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
+	// 		const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+	// 		if (stat.isFile() != true) {
+	// 			process.chdir(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+	// 		}
+	// 		else {
+	// 			contextMsg.channel.send("Error: given path is not an directory.");
+	// 		}
+	// 	}
+	// }
+	// else {
+
+
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	//console.log("test")
+
+	//console.log(pathCorrected);
+
+
+	//console.log(pathCorrected);
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		//console.log(i);
+		//console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		//console.log(Object.keys(ENV_VAR_LIST)[i]);
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+	//console.log(pathCorrected);
+
+	if (pathCorrected.startsWith("/")) {
+		//if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+	//console.log(pathCorrected);
+
+	if (fs.existsSync(pathCorrected)) {
+		if (path.resolve(pathCorrected).includes("VirtualDrive") && !path.resolve(pathCorrected).includes(ENV_VAR_APT_PROTECTED_DIR)) {
+			const stat = fs.lstatSync(pathCorrected);
 			if (stat.isFile() != true) {
-				process.chdir(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+				process.chdir(pathCorrected);
 			}
 			else {
 				contextMsg.channel.send("Error: given path is not an directory.");
 			}
 		}
+		else {
+			contextMsg.channel.send("Error: cannot `cd` into this directory.");
+		}
 	}
 	else {
-		if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-			if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
-				const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-				if (stat.isFile() != true) {
-					process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-				}
-				else {
-					contextMsg.channel.send("Error: given path is not an directory.");
-				}
-			}
-			else {
-				contextMsg.channel.send("Error: cannot `cd` into this directory.");
-			}
-		}
-		else {
-			contextMsg.channel.send("Error: directory doesn't exist.");
-		}
+		contextMsg.channel.send("Error: directory doesn't exist.");
 	}
+	//}
+}
+
+function escapeRegExp(string) {
+	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Replace all occurrences of the string find in str with the string replace
+ * @param {string} str - The string to be modified.
+ * @param {string} find - The string to search for.
+ * @param {string} replace - The string to replace the matches with.
+ * @returns {string} The string with the replaced values.
+ */
+function replaceAll(str, find, replace) {
+	return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
 }
 
 /**
