@@ -172,7 +172,7 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$cmdlist")) {
-			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy`\n`rmdir` - `remove directory`\n`rm` - `remove`\n`mv` - `copy`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
+			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy file`\n`rmdir` - `remove directory`\n`rm` - `remove file`\n`mv` - `move file`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
 			return;
 		}
 		if (message.content.startsWith("$upgrade-os")) {
@@ -510,7 +510,6 @@ function mkdirCommand(contextMsg) {
 			} catch (error) {
 				contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
 			}
-
 		}
 		else {
 			contextMsg.channel.send("Error: directory already exists.");
@@ -525,12 +524,22 @@ function mkdirCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function catCommand(contextMsg) {
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+		if (fs.existsSync(pathCorrected)) {
+			const stat = fs.lstatSync(pathCorrected);
 			console.log(stat.size);
 			if (stat.isFile()) {
 				if (stat.size == 0) {
@@ -541,7 +550,7 @@ function catCommand(contextMsg) {
 				}
 				else {
 					let output = '';
-					const readStream = fs.createReadStream(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+					const readStream = fs.createReadStream(pathCorrected);
 					readStream.on('data', function (chunk) {
 						output += chunk.toString('utf8');
 					});
@@ -551,6 +560,8 @@ function catCommand(contextMsg) {
 							const toSend = str.substring(i, Math.min(str.length, i + 2000));
 							contextMsg.channel.send("```\n" + toSend + "\n```");
 						}
+						// TODO: replace-able with
+						// contextMsg.channel.send("```\n" + str + "\n```", { split: true });
 					});
 				}
 			}
@@ -569,28 +580,20 @@ function catCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function wgetCommand(contextMsg) {
-
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive")) {
-		contextMsg.channel.send("Error: cannot access this path.");
+	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == "$wget") {
+		contextMsg.channel.send("Error: link not specified.");
 	}
 	else {
-		if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == "$wget") {
-			contextMsg.channel.send("Error: link not specified.");
+		var parsed = url.parse(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+		if (!fs.existsSync(path.basename(parsed.pathname))) {
+			contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
+			let download = wget.download(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), path.basename(parsed.pathname));
+			download.on('end', function (output) {
+				contextMsg.channel.send("Download complete.");
+			});
 		}
 		else {
-			if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-
-				var parsed = url.parse(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-
-				contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-				let download = wget.download(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), path.basename(parsed.pathname));
-				download.on('end', function (output) {
-					contextMsg.channel.send("Download complete.");
-				});
-			}
-			else {
-				contextMsg.channel.send("Error: file already exist.");
-			}
+			contextMsg.channel.send("Error: file already exist.");
 		}
 	}
 }
@@ -600,17 +603,35 @@ function wgetCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function cpCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.split(" ")[1];
+	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
-	if (!path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+	if (pathCorrected2.startsWith("/")) {
+		pathCorrected2 = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	//console.log(pathCorrected);
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || !path.resolve(pathCorrected2).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (fs.existsSync(contextMsg.content.split(" ")[1])) {
-			if (!fs.existsSync(contextMsg.content.split(" ")[2])) {
-				fs.copyFile(contextMsg.content.split(" ")[1], contextMsg.content.split(" ")[2], (err) => {
-					if (err) throw err;
+		if (fs.existsSync(pathCorrected)) {
+			if (!fs.existsSync(pathCorrected2)) {
+				try {
+					fs.copyFileSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
-				});
+				} catch (error) {
+					contextMsg.channel.send("Unexpected error occurred while copying `" + path.basename(pathCorrected) + "`.");
+				}
 			}
 			else {
 				contextMsg.channel.send("Error: target file already exist or is directory.");
@@ -627,24 +648,31 @@ function cpCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function rmdirCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-			if (!fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).isFile()) {
-
-				fs.readdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), (err, files) => {
+		if (fs.existsSync(pathCorrected)) {
+			if (!fs.lstatSync(pathCorrected).isFile()) {
+				fs.readdir(pathCorrected, (err, files) => {
 					if (!files.length) {
-						fs.rmdirSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-						contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
+						fs.rmdirSync(pathCorrected);
+						contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 					}
 					else {
 						contextMsg.channel.send("Error: directory is not empty.");
 					}
 				});
-
 			}
 			else {
 				contextMsg.channel.send("Error: given path is not an directory.");
@@ -661,13 +689,22 @@ function rmdirCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function rmCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || pathCorrected.includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("-")) {
-			const msgSplit = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).split(" ");
+		if (pathCorrected.startsWith("-")) {
+			const msgSplit = pathCorrected.split(" ");
 			if (!msgSplit[1]) {
 				contextMsg.channel.send("Error: no file or directory specified.");
 				return;
@@ -718,10 +755,10 @@ function rmCommand(contextMsg) {
 			}
 		}
 		else {
-			if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-				if (fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).isFile()) {
-					fs.rmSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-					contextMsg.channel.send("File `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
+			if (fs.existsSync(pathCorrected)) {
+				if (fs.lstatSync(pathCorrected).isFile()) {
+					fs.rmSync(pathCorrected);
+					contextMsg.channel.send("File `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` deleted successfully.");
 				}
 				else {
 					contextMsg.channel.send("Error: given path is not an file.");
@@ -739,17 +776,35 @@ function rmCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function mvCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.split(" ")[1];
+	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[1])))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.split(" ")[2])))) || !path.resolve(contextMsg.content.split(" ")[1]).includes("VirtualDrive") || !path.resolve(contextMsg.content.split(" ")[2]).includes("VirtualDrive")) {
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+	if (pathCorrected2.startsWith("/")) {
+		pathCorrected2 = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	//console.log(pathCorrected);
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || !path.resolve(pathCorrected2).includes("VirtualDrive") || pathCorrected.includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected)))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected2))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (fs.existsSync(contextMsg.content.split(" ")[1])) {
-			if (!fs.existsSync(contextMsg.content.split(" ")[2])) {
-				fs.rename(contextMsg.content.split(" ")[1], contextMsg.content.split(" ")[2], (err) => {
-					if (err) throw err;
+		if (fs.existsSync(pathCorrected)) {
+			if (!fs.existsSync(pathCorrected2)) {
+				try {
+					fs.renameSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
-				});
+				} catch (error) {
+					contextMsg.channel.send("Unexpected error occurred while moving `" + path.basename(pathCorrected) + "`.");
+				}
 			}
 			else {
 				contextMsg.channel.send("Error: target file already exist or is directory.");
@@ -766,13 +821,22 @@ function mvCommand(contextMsg) {
  * @param contextMsg - The message object that triggered the command.
  */
 function touchCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)))))) {
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
-		if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-			fs.closeSync(fs.openSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), 'w'));
+		if (!fs.existsSync(pathCorrected)) {
+			fs.closeSync(fs.openSync(pathCorrected, 'w'));
 			contextMsg.channel.send("Done.");
 		}
 		else {
