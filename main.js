@@ -8,6 +8,9 @@ let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
+const ENV_VAR_LIST = {
+	"HOME": ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root"
+}
 const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
@@ -392,22 +395,35 @@ function pwdCommand(contextMsg) {
  * @param contextMsg - The message that triggered the command.
  */
 function cdCommand(contextMsg) {
-	if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-		if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
-			const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$")) {
+		if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
+			const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
 			if (stat.isFile() != true) {
-				process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+				process.chdir(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
 			}
 			else {
 				contextMsg.channel.send("Error: given path is not an directory.");
 			}
 		}
-		else {
-			contextMsg.channel.send("Error: cannot `cd` into this directory.");
-		}
 	}
 	else {
-		contextMsg.channel.send("Error: directory doesn't exist.");
+		if (fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
+			if (path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") && !path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes(ENV_VAR_APT_PROTECTED_DIR)) {
+				const stat = fs.lstatSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+				if (stat.isFile() != true) {
+					process.chdir(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+				}
+				else {
+					contextMsg.channel.send("Error: given path is not an directory.");
+				}
+			}
+			else {
+				contextMsg.channel.send("Error: cannot `cd` into this directory.");
+			}
+		}
+		else {
+			contextMsg.channel.send("Error: directory doesn't exist.");
+		}
 	}
 }
 
