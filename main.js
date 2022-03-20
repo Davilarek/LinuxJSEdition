@@ -82,7 +82,7 @@ function getHash() {
 	const hashSum = crypto.createHash('sha1');
 	hashSum.update(fileBuffer);
 
-	const hex = hashSum.digest('base64');
+	const hex = hashSum.digest('hex');
 
 	console.log(hex);
 }
