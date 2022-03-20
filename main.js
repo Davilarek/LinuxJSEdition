@@ -369,6 +369,7 @@ function requireUncached(module) {
  */
 function lsCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 	fs.readdir(process.cwd(), (err, files) => {
 		if (!files.length) {
 			contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
@@ -384,10 +385,11 @@ function lsCommand(contextMsg) {
  * @param contextMsg - The message that triggered the command.
  */
 function pwdCommand(contextMsg) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
-	if (pathWithoutDrive == "") {
-		pathWithoutDrive = "\\";
-	}
+	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '/');
+	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+	// if (pathWithoutDrive == "") {
+	// 	pathWithoutDrive = "\\";
+	// }
 	contextMsg.channel.send(pathWithoutDrive)
 }
 
@@ -422,6 +424,8 @@ function cdCommand(contextMsg) {
 		//console.log(i);
 		//console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 		//console.log(Object.keys(ENV_VAR_LIST)[i]);
+
+		// it doesn't look good
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 	}
 	//console.log(pathCorrected);
@@ -472,13 +476,41 @@ function replaceAll(str, find, replace) {
  * @param contextMsg - The message object that triggered the command.
  */
 function mkdirCommand(contextMsg) {
-	if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("..") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith(path.sep) || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("/")) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+
+	// if (!path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).includes("VirtualDrive") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("..") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith(path.sep) || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).endsWith("/")) {
+	// 	contextMsg.channel.send("Error: cannot create directory.");
+	// }
+	// else {
+	// 	if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
+	// 		fs.mkdirSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+	// 		contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
+	// 	}
+	// 	else {
+	// 		contextMsg.channel.send("Error: directory already exists.");
+	// 	}
+	// }
+
+	if (!path.resolve(pathCorrected).includes("VirtualDrive") || path.basename(pathCorrected) == "VirtualDrive" || pathCorrected.endsWith("..") || pathCorrected.endsWith(path.sep) || pathCorrected.endsWith("/")) {
 		contextMsg.channel.send("Error: cannot create directory.");
 	}
 	else {
-		if (!fs.existsSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1))) {
-			fs.mkdirSync(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
-			contextMsg.channel.send("Directory `" + path.resolve(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1)).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
+		if (!fs.existsSync(pathCorrected)) {
+			try {
+				fs.mkdirSync(pathCorrected);
+				contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
+			} catch (error) {
+				contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
+			}
+
 		}
 		else {
 			contextMsg.channel.send("Error: directory already exists.");
