@@ -183,6 +183,10 @@ function register() {
 			RebootOS();
 			return;
 		}
+		if (message.content.startsWith("$echo")) {
+			echoCommand(message);
+			return;
+		}
 	});
 }
 
@@ -936,6 +940,16 @@ function RebootOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Reboot();
+}
+
+function echoCommand(contextMsg) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	}
+
+	contextMsg.channel.send(pathCorrected);
 }
 
 module.exports.CloseAndUpgrade = function () {
