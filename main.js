@@ -77,11 +77,12 @@ function getHash() {
 	const crypto = require('crypto');
 	const fs = require('fs');
 
+	console.log(__filename);
 	const fileBuffer = fs.readFileSync(__filename);
 	const hashSum = crypto.createHash('sha1');
 	hashSum.update(fileBuffer);
 
-	const hex = hashSum.digest('hex');
+	const hex = hashSum.digest('base64');
 
 	console.log(hex);
 }
