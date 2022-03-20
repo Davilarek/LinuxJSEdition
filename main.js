@@ -34,6 +34,8 @@ client.on('ready', () => {
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
 	register();
+
+	getHash();
 });
 
 /**
@@ -69,6 +71,19 @@ async function getAllRepoPackages() {
 		packages.push(tree[i].path.replace("-install.js", ""));
 	}
 	return packages;
+}
+
+function getHash() {
+	const crypto = require('crypto');
+	const fs = require('fs');
+
+	const fileBuffer = fs.readFileSync(__filename);
+	const hashSum = crypto.createHash('sha1');
+	hashSum.update(fileBuffer);
+
+	const hex = hashSum.digest('hex');
+
+	console.log(hex);
 }
 
 /**
