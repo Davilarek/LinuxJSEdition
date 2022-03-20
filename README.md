@@ -47,6 +47,7 @@ $cd bin
 $cat dir.cfg
 $apt install git
 
+Please note that these commands doesn't support all SH features like loops or pipe.
 ## Development
 Please report any bugs and security holes, when you find any.
 
