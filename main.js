@@ -199,6 +199,7 @@ function aptCommand(contextMsg) {
 
 	/* This code is responsible for installing a package. */
 	if (contextMsg.content.split(" ")[1] == "install") {
+		if (contextMsg.content.split(" ")[2] == undefined) { return; }
 		let start = new Date().getTime();
 		let updatedCount = 0;
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -251,6 +252,7 @@ function aptCommand(contextMsg) {
 
 	/* This code is responsible for removing a package from the system. */
 	if (contextMsg.content.split(" ")[1] == "remove") {
+		if (contextMsg.content.split(" ")[2] == undefined) { return; }
 		let start = new Date().getTime();
 		let updatedCount = 0;
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
@@ -419,6 +421,8 @@ function cdCommand(contextMsg) {
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
+	if (pathCorrected == "$cd") { return; }
+
 	//console.log("test")
 
 	//console.log(pathCorrected);
@@ -483,6 +487,8 @@ function replaceAll(str, find, replace) {
 function mkdirCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
+	if (pathCorrected == "$mkdir") { return; }
+
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 	}
@@ -530,6 +536,8 @@ function mkdirCommand(contextMsg) {
  */
 function catCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	if (pathCorrected == "$cat") { return; }
 
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
@@ -611,6 +619,9 @@ function cpCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
+	if (pathCorrected == undefined) { return; }
+	if (pathCorrected2 == undefined) { return; }
+
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
@@ -655,6 +666,8 @@ function cpCommand(contextMsg) {
 function rmdirCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
+	if (pathCorrected == "$rmdir") { return; }
+
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 	}
@@ -695,6 +708,8 @@ function rmdirCommand(contextMsg) {
  */
 function rmCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	if (pathCorrected == "$rm") { return; }
 
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
@@ -784,6 +799,9 @@ function mvCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
+	if (pathCorrected == undefined) { return; }
+	if (pathCorrected2 == undefined) { return; }
+
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
@@ -827,6 +845,8 @@ function mvCommand(contextMsg) {
  */
 function touchCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	if (pathCorrected == "$touch") { return; }
 
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
@@ -945,7 +965,7 @@ function RebootOS() {
 
 function echoCommand(contextMsg) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
-
+	if (pathCorrected == "$echo") { return; }
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 	}
