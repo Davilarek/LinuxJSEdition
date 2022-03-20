@@ -35,7 +35,7 @@ client.on('ready', () => {
 	process.chdir('VirtualDrive');
 	register();
 
-	//getHash();
+	getHash();
 });
 
 /**
