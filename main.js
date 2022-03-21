@@ -110,7 +110,7 @@ function register() {
 
 			});
 			cdCommand({
-				content: "$cd root",
+				content: "$cd $HOME",
 				channel: ENV_VAR_NULL_CHANNEL
 			})
 			ENV_VAR_BOOT_COMPLETE = true;
