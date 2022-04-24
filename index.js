@@ -33,8 +33,10 @@ function requireUncached(module) {
     return require(module);
 }
 
-/* A function that downloads the latest version of the main.js file from the GitHub repository and then
-runs the npm install command. */
+/**
+ * A function that downloads the latest version of the main.js file from the GitHub repository
+ * and then runs it. 
+ */
 module.exports.Upgrade = function () {
     //mainFile.CloseAndUpgrade();
     delete require.cache[require.resolve("./main.js")];
