@@ -38,6 +38,24 @@ client.on('ready', () => {
 	getHash();
 });
 
+client.cmdList = {
+	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
+	"ls": `display files in current directory.`,
+	"pwd": `print working directory.`,
+	"cd": `change directory.`,
+	"mkdir": `make directory`,
+	"cat": `read files`,
+	"wget": `download files from web`,
+	"cp": `copy file`,
+	"rmdir": `remove directory`,
+	"rm": `remove file`,
+	"mv": `move file`,
+	"touch": `create new file`,
+	"js": `execute js file from bin directory`,
+	"upgrade-os": `upgrade everything and re-download the os`,
+	"reboot": `reboots os`
+}
+
 /**
  * Get commit count from Github and return it
  * @returns The latest commit count.
@@ -189,7 +207,13 @@ function register() {
 			return;
 		}
 		if (message.content.startsWith("$cmdlist")) {
-			message.channel.send("`apt` - `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`\n`ls` - `display files in current directory.`\n`pwd` - `print working directory.`\n`cd` - `change directory.`\n`mkdir` - `make directory`\n`cat` - `read files`\n`wget` - `download files from web`\n`cp` - `copy file`\n`rmdir` - `remove directory`\n`rm` - `remove file`\n`mv` - `move file`\n`touch` - `create new file`\n`js` - `execute js file from bin directory`\n`upgrade-os` - `upgrade everything and re-download the os`\n`reboot` - `reboots os`");
+			// format = 'name' - 'description'
+			let cmdlist = "";
+			for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
+				cmdlist += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
+			}
+			console.log(cmdlist);
+			message.channel.send(cmdlist);
 			return;
 		}
 		if (message.content.startsWith("$upgrade-os")) {
