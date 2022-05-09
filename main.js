@@ -240,7 +240,7 @@ function aptCommand(contextMsg) {
 	/* This code is responsible for installing a package. */
 	if (contextMsg.content.split(" ")[1] == "install") {
 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		let start = new Date().getTime();
+		let start = performance.now();
 		let updatedCount = 0;
 		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		contextMsg.channel.send("Reading config...");
@@ -278,9 +278,9 @@ function aptCommand(contextMsg) {
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
 				updatedCount += 1;
 				contextMsg.channel.send("Done").then(v => {
-					var end = new Date().getTime();
+					var end = performance.now();
 					var time = end - start;
-					contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+					contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
 				});
 			});
 		});
@@ -293,7 +293,7 @@ function aptCommand(contextMsg) {
 	/* This code is responsible for removing a package from the system. */
 	if (contextMsg.content.split(" ")[1] == "remove") {
 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		let start = new Date().getTime();
+		let start = performance.now();
 		let updatedCount = 0;
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		let removeDir = null
@@ -321,9 +321,9 @@ function aptCommand(contextMsg) {
 			});
 			updatedCount += 1;
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
-				var end = new Date().getTime();
+				var end = performance.now();
 				var time = end - start;
-				contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
 			});
 		}
 		else {
@@ -340,7 +340,7 @@ function aptCommand(contextMsg) {
 		let branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
 		let gitUrlhName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
-		let start = new Date().getTime();
+		let start = performance.now();
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
@@ -377,9 +377,9 @@ function aptCommand(contextMsg) {
 			});
 		}
 		contextMsg.channel.send("Done").then(v => {
-			var end = new Date().getTime();
+			var end = performance.now();
 			var time = end - start;
-			contextMsg.channel.send(updatedCount + " package(s) were updated in " + time + "ms.");
+			contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
 		});
 	}
 
