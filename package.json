@@ -11,7 +11,7 @@
   "dependencies": {
     "bent": "^7.3.12",
     "discord.js": "^12.5.3",
-    "wget-improved": "^3.3.0"
+    "wget-improved": "^3.3.1"
   },
   "devDependencies": {
     "@types/node": "^16.11.26"
