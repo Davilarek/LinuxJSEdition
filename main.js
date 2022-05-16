@@ -1,4 +1,8 @@
 /* eslint-disable no-unused-vars */
+
+// 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
+// at this moment, I'm too lazy to change it. I hope I will change it in the future.
+
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const fs = require('fs');

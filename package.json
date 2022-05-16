@@ -4,7 +4,7 @@
   "description": "A basic Linux simulator bot for Discord.",
   "main": "index.js",
   "scripts": {
-    "start": "node index"
+    "start": "node ."
   },
   "author": "Davilarek",
   "license": "MIT",
