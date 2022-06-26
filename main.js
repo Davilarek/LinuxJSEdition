@@ -60,6 +60,10 @@ client.cmdList = {
 	"reboot": `reboots os`
 }
 
+client.enableStdin = true;
+
+client.commandHistory = [];
+
 /**
  * Get commit count from Github and return it
  * @returns The latest commit count.
@@ -136,102 +140,26 @@ function register() {
 				channel: ENV_VAR_NULL_CHANNEL
 			})
 			ENV_VAR_BOOT_COMPLETE = true;
+			client.commandHistory.push("$boot");
 			return;
 		}
 
 		// bot isn't booted, go back
 		if (!ENV_VAR_BOOT_COMPLETE) return;
 
-		if (message.content.startsWith("$apt install")) {
-			aptCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$apt remove")) {
-			aptCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$apt update")) {
-			aptCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$apt list-all")) {
-			aptCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$apt help")) {
-			aptCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$ls")) {
-			lsCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$pwd")) {
-			pwdCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$cd")) {
-			cdCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$mkdir")) {
-			mkdirCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$cat")) {
-			catCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$wget")) {
-			wgetCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$cp")) {
-			cpCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$rmdir")) {
-			rmdirCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$rm")) {
-			rmCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$mv")) {
-			mvCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$touch")) {
-			touchCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$js")) {
-			jsCommand(message);
-			return;
-		}
-		if (message.content.startsWith("$cmdlist")) {
-			// format = 'name' - 'description'
-			let cmdlist = "";
-			for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
-				cmdlist += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
-			}
-			console.log(cmdlist);
-			message.channel.send(cmdlist);
-			return;
-		}
-		if (message.content.startsWith("$upgrade-os")) {
-			UpgradeOS();
-			return;
-		}
-		if (message.content.startsWith("$reboot")) {
-			RebootOS();
-			return;
-		}
-		if (message.content.startsWith("$echo")) {
-			echoCommand(message);
-			return;
-		}
+		if (message.content.startsWith("$"))
+			client.commandHistory.push(message.content);
+
+		// if (client.enableStdin)
+		console.log(client.commandHistory.length);
+
+		if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
+		// if (client.commandHistory[client.commandHistory.length - 2] && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
+			shellFunctionProcessor(message);
+		// else if (client.commandHistory.length > 1)
+		// 	shellFunctionProcessor(message);
+		// else if ()
+		// 	shellFunctionProcessor(message);
 	});
 }
 
@@ -1017,8 +945,134 @@ function echoCommand(contextMsg) {
 	contextMsg.channel.send(pathCorrected);
 }
 
+/**
+ * It takes a string and returns a fake message object with the string as the content
+ * @param {string} text - The text that you want to send to the bot.
+ * @returns A message object with the content of the text and the channel of the null channel.
+ */
+function createFakeMessageObject(text) {
+	let messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL }
+	return messageObject;
+}
+
+function shellFunctionProcessor(messageObject) {
+	if (messageObject.content.startsWith("$apt install")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$apt remove")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$apt update")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$apt list-all")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$apt help")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$ls")) {
+		lsCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$pwd")) {
+		pwdCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$cd")) {
+		cdCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$mkdir")) {
+		mkdirCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$cat")) {
+		catCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$wget")) {
+		wgetCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$cp")) {
+		cpCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$rmdir")) {
+		rmdirCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$rm")) {
+		rmCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$mv")) {
+		mvCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$touch")) {
+		touchCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$js")) {
+		jsCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$cmdlist")) {
+		// format = 'name' - 'description'
+		let cmdlist = "";
+		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
+			cmdlist += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
+		}
+		console.log(cmdlist);
+		messageObject.channel.send(cmdlist);
+		return;
+	}
+	if (messageObject.content.startsWith("$upgrade-os")) {
+		UpgradeOS();
+		return;
+	}
+	if (messageObject.content.startsWith("$reboot")) {
+		RebootOS();
+		return;
+	}
+	if (messageObject.content.startsWith("$echo")) {
+		echoCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$sh")) {
+		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
+			messageObject.channel.send("Error: filename required"); return;
+		}
+		executeShFile(messageObject.content.split(" ")[1], messageObject);
+		return;
+	}
+}
+
 module.exports.CloseAndUpgrade = function () {
 	UpgradeOS();
 };
+
+function executeShFile(filename, msg) {
+	let fileContent = fs.readFileSync(filename, 'utf-8')
+	let lines = fileContent.split("\n");
+	for (let currentLineIndex = 0; currentLineIndex < lines.length; currentLineIndex++) {
+		const element = lines[currentLineIndex];
+
+		if (msg) {
+			let msgMod = { "content": element, "channel": msg.channel };
+			shellFunctionProcessor(msgMod);
+		}
+		else
+			shellFunctionProcessor(createFakeMessageObject(element));
+		//shellFunctionProcessor()
+	}
+}
 
 client.login(ENV_VAR_BOT_TOKEN);
