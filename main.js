@@ -65,6 +65,8 @@ client.enableStdin = true;
 
 client.commandHistory = [];
 
+client.executeCommand = shellFunctionProcessor;
+
 /**
  * Get commit count from Github and return it
  * @returns The latest commit count.
@@ -955,6 +957,8 @@ function createFakeMessageObject(text) {
 	let messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL }
 	return messageObject;
 }
+
+client.fakeMessageCreator = createFakeMessageObject;
 
 function shellFunctionProcessor(messageObject) {
 	if (messageObject.content.startsWith("$apt install")) {
