@@ -57,7 +57,8 @@ client.cmdList = {
 	"touch": `create new file`,
 	"js": `execute js file from bin directory`,
 	"upgrade-os": `upgrade everything and re-download the os`,
-	"reboot": `reboots os`
+	"reboot": `reboots os`,
+	"sh": `runs a file executing every line with command from this list.`
 }
 
 client.enableStdin = true;
@@ -154,7 +155,7 @@ function register() {
 		console.log(client.commandHistory.length);
 
 		if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
-		// if (client.commandHistory[client.commandHistory.length - 2] && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
+			// if (client.commandHistory[client.commandHistory.length - 2] && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
 			shellFunctionProcessor(message);
 		// else if (client.commandHistory.length > 1)
 		// 	shellFunctionProcessor(message);
