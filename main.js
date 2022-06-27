@@ -341,7 +341,35 @@ function aptCommand(contextMsg) {
 
 
 	if (contextMsg.content.split(" ")[1] == "help") {
-		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`");
+		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`");
+	}
+
+	if (contextMsg.content.split(" ")[1] == "change-branch") {
+		// console.log(contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, ""))
+		contextMsg.channel.send("Read `/root/.config`...");
+		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+		let changedBranch = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString();
+		let c2 = changedBranch.split("\n")[2].split('=')[0] + "=" + contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "")
+		contextMsg.channel.send("Replace lines...");
+		// c2.split('=')[1] = ;
+		// console.log(changedBranch.split("\n"))
+		// console.log(c2);
+		let final = "";
+		for (let index = 0; index < changedBranch.split("\n").length; index++) {
+			// console.log(changedBranch.split("\n")[index])
+			// console.log(index)
+
+			if (index == 2) {
+				final += c2;
+				continue;
+			}
+			final += changedBranch.split("\n")[index] + "\n";
+		}
+		contextMsg.channel.send("Write to `/root/.config`...");
+		// console.log(final);
+		fs.writeFileSync(BASEDIR + "root" + path.sep + ".config", final);
+		contextMsg.channel.send("Done.");
+		shellFunctionProcessor({ "content": "$cat /root/.config", "channel": contextMsg.channel });
 	}
 }
 
@@ -996,6 +1024,10 @@ function shellFunctionProcessor(messageObject) {
 		return;
 	}
 	if (messageObject.content.startsWith("$apt help")) {
+		aptCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$apt change-branch")) {
 		aptCommand(messageObject);
 		return;
 	}
