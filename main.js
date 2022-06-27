@@ -998,10 +998,9 @@ function createFakeMessageObject(text) {
 
 client.fakeMessageCreator = createFakeMessageObject;
 
-let externalCommandList = {
+let externalCommandList = {};
 
-}
-
+/* Registering an external command. */
 client.registerExternalCommand = (name, func) => {
 	externalCommandList[name] = func;
 }
