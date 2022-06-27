@@ -154,7 +154,7 @@ function register() {
 			client.commandHistory.push(message.content);
 
 		// if (client.enableStdin)
-		console.log(client.commandHistory.length);
+		// console.log(client.commandHistory.length);
 
 		if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
 			// if (client.commandHistory[client.commandHistory.length - 2] && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
