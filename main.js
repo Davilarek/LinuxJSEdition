@@ -970,6 +970,14 @@ function createFakeMessageObject(text) {
 
 client.fakeMessageCreator = createFakeMessageObject;
 
+let externalCommandList = {
+
+}
+
+client.registerExternalCommand = (name, func) => {
+	externalCommandList[name] = func;
+}
+
 function shellFunctionProcessor(messageObject) {
 	if (messageObject.content.startsWith("$apt install")) {
 		aptCommand(messageObject);
@@ -1067,6 +1075,15 @@ function shellFunctionProcessor(messageObject) {
 		}
 		executeShFile(messageObject.content.split(" ")[1], messageObject);
 		return;
+	}
+	// console.log(externalCommandList)
+	for (let externalCommandIndex = 0; externalCommandIndex < Object.keys(externalCommandList).length; externalCommandIndex++) {
+		const element = Object.keys(externalCommandList)[externalCommandIndex];
+		// console.log(element);
+		if (element == messageObject.content.split(" ")[0]) {
+			// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
+			externalCommandList[element](messageObject);
+		}
 	}
 }
 
