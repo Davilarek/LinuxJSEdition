@@ -48,7 +48,12 @@ module.exports.Upgrade = function () {
 };
 
 /* A way to reload the main.js file. */
-module.exports.Reboot = function () {
+module.exports.Reboot = function (msg) {
     delete require.cache[require.resolve("./main.js")];
     mainFile = requireUncached("./main.js");
+    // console.log(msg)
+    // if (msg) {
+    //     let msgMod = { "content": "$boot", "channel": msg.channel };
+    //     mainFile.cli.executeCommand(msgMod);
+    // }
 };

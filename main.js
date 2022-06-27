@@ -67,6 +67,15 @@ client.commandHistory = [];
 
 client.executeCommand = shellFunctionProcessor;
 
+client.listEnv = ENV_VAR_LIST;
+
+client.coolTools = {
+	"replaceAll": replaceAll
+}
+
+// very unsafe
+// exports.cli = client;
+
 /**
  * Get commit count from Github and return it
  * @returns The latest commit count.
@@ -153,10 +162,11 @@ function register() {
 		if (message.content.startsWith("$"))
 			client.commandHistory.push(message.content);
 
-		// if (client.enableStdin)
-		// console.log(client.commandHistory.length);
+		// console.log(client.enableStdin)
+		if (client.enableStdin)
+			// console.log(client.commandHistory.length);
 
-		if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
+			// if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
 			// if (client.commandHistory[client.commandHistory.length - 2] && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
 			shellFunctionProcessor(message);
 		// else if (client.commandHistory.length > 1)
@@ -932,10 +942,10 @@ function UpgradeOS() {
  * * Close the main process.
  * * Run the `Reboot` function from the `index.js` file
  */
-function RebootOS() {
+function RebootOS(msg) {
 	process.chdir(ENV_VAR_BASE_DIR);
 	closeMain();
-	require.cache[require.resolve("./index.js")].exports.Reboot();
+	require.cache[require.resolve("./index.js")].exports.Reboot(msg);
 }
 
 function echoCommand(contextMsg) {
@@ -1044,7 +1054,7 @@ function shellFunctionProcessor(messageObject) {
 		return;
 	}
 	if (messageObject.content.startsWith("$reboot")) {
-		RebootOS();
+		RebootOS(messageObject);
 		return;
 	}
 	if (messageObject.content.startsWith("$echo")) {
