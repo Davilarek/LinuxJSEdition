@@ -12,6 +12,7 @@ VirtualDrive/usr/*.*
 VirtualDrive/root/*.*
 !VirtualDrive/root/empty.txt
 !VirtualDrive/root/.config
+!VirtualDrive/root/.bashrc
 VirtualDrive/etc/*.*
 !VirtualDrive/etc/empty.txt
 VirtualDrive/bin/autorun/*.*
