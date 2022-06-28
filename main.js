@@ -28,7 +28,7 @@ const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "
 let ENV_VAR_LIST = {
 	"$HOME": "/root",
 	"~": "/root",
-	"USER": "root"
+	"$USER": "root"
 }
 
 function getRandomInt(max) {
@@ -86,7 +86,8 @@ client.cmdList = {
 	"reboot": `reboots os`,
 	"sh": `runs a file executing every line with command from this list.`,
 	"echo": 'simple echo command. supports variables',
-	"export": 'makes a variable global'
+	"export": 'makes a variable global',
+	"whoami": `displays current user (always root)`
 }
 
 client.enableStdin = true;
@@ -105,6 +106,22 @@ client.coolTools = {
 	"replaceAll": replaceAll
 }
 
+/* Registering an external command. */
+client.registerExternalCommand = (name, func) => {
+	externalCommandList[name] = func;
+}
+
+client.safeClient = {
+	"cmdList": client.cmdList,
+	"enableStdin": client.enableStdin,
+	// "commandHistory": client.commandHistory,
+	"executeCommand": client.executeCommand,
+	"listEnv": ENV_VAR_LIST,
+	"fakeMessageCreator": client.fakeMessageCreator,
+	// "commandOutputHistory": client.commandOutputHistory,
+	"coolTools": client.coolTools,
+	"registerExternalCommand": client.registerExternalCommand
+}
 
 // very unsafe
 // exports.cli = client;
@@ -174,9 +191,10 @@ function register() {
 				if (file == "empty.txt") { return; }
 				try {
 					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client);
+					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
 					message.channel.send("An unexpected error occured while trying to run package: " + file);
+					console.log(error);
 				}
 
 			});
@@ -185,7 +203,7 @@ function register() {
 			// 	channel: ENV_VAR_NULL_CHANNEL
 			// })
 			shellFunctionProcessor(createFakeMessageObject("$cd $HOME"));
-			executeShFile(".bashrc");
+			executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
 			client.commandHistory.push("$boot");
 			return;
@@ -198,7 +216,7 @@ function register() {
 			client.commandHistory.push(message.content);
 
 		// console.log(client.enableStdin)
-		if (client.enableStdin)
+		if (client.safeClient["enableStdin"] == true)
 			// console.log(client.commandHistory.length);
 
 			// if (client.commandHistory.length > 1 && !client.commandHistory[client.commandHistory.length - 2].startsWith("$edit"))
@@ -255,7 +273,7 @@ function aptCommand(contextMsg) {
 				if (err) throw err;
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 				mod = requireUncached(pFile);
-				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				updatedCount += 1;
 				contextMsg.channel.send("Done").then(v => {
 					var end = performance.now();
@@ -294,7 +312,7 @@ function aptCommand(contextMsg) {
 				if (file == "empty.txt") { return; }
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
 					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
 				}
@@ -350,7 +368,7 @@ function aptCommand(contextMsg) {
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
 					//contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
 				}
@@ -952,7 +970,7 @@ function jsCommand(contextMsg) {
 	try {
 		mod = require(pFile);
 		contextMsg.channel.send("Executing \"" + filenameBase + "\"...");
-		mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client);
+		mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 		contextMsg.channel.send("Done");
 	} catch (error) {
 		contextMsg.channel.send("Cannot execute \"" + filenameBase + "\".");
@@ -1069,10 +1087,7 @@ function createFakeMessageObject(text) {
 
 let externalCommandList = {};
 
-/* Registering an external command. */
-client.registerExternalCommand = (name, func) => {
-	externalCommandList[name] = func;
-}
+
 
 function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
@@ -1177,6 +1192,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 	}
 	if (messageObject.content.startsWith("$export")) {
 		exportCommand(messageObject);
+		return;
+	}
+	if (messageObject.content.startsWith("$whoami")) {
+		whoamiCommand(messageObject);
 		return;
 	}
 	if (messageObject.content.startsWith("$sh")) {
@@ -1363,6 +1382,10 @@ function exportCommand(contextMsg, variableList) {
 	}
 	console.log("Exporting variable...");
 	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
+}
+
+function whoamiCommand(contextMsg) {
+	contextMsg.channel.send(ENV_VAR_LIST["$USER"]);
 }
 
 let mathChar = [
