@@ -4,6 +4,17 @@
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
 const Discord = require('discord.js');
+
+var open = Discord.TextChannel.prototype.send;
+
+function openReplacement(text) {
+	// console.log(text);
+	client.commandOutputHistory[0] = text;
+	return open.apply(this, arguments);
+}
+
+Discord.TextChannel.prototype.send = openReplacement;
+
 const client = new Discord.Client();
 const fs = require('fs');
 const path = require('path');
@@ -13,10 +24,15 @@ let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
-const ENV_VAR_LIST = {
+let ENV_VAR_LIST = {
 	"$HOME": "/root",
-	"~": "/root"
+	"~": "/root",
 }
+
+function getRandomInt(max) {
+	return Math.floor(Math.random() * max);
+}
+
 const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
@@ -25,7 +41,15 @@ const ENV_VAR_NULL_CHANNEL = {
 	 * @param {string} content
 	*/
 	send: function (content) {
+		client.commandOutputHistory[0] = content;
 		content = null;
+		return {
+			"then": (v) => {
+				// v = null;
+				// console.log(v);
+				// v();
+			}
+		}
 	}
 };
 let ENV_VAR_VERSION = 0;
@@ -69,9 +93,14 @@ client.executeCommand = shellFunctionProcessor;
 
 client.listEnv = ENV_VAR_LIST;
 
+client.fakeMessageCreator = createFakeMessageObject;
+
+client.commandOutputHistory = {};
+
 client.coolTools = {
 	"replaceAll": replaceAll
 }
+
 
 // very unsafe
 // exports.cli = client;
@@ -151,6 +180,7 @@ function register() {
 				content: "$cd $HOME",
 				channel: ENV_VAR_NULL_CHANNEL
 			})
+			executeShFile(".bashrc");
 			ENV_VAR_BOOT_COMPLETE = true;
 			client.commandHistory.push("$boot");
 			return;
@@ -417,7 +447,7 @@ function pwdCommand(contextMsg) {
  * Change the current working directory to the given path
  * @param contextMsg - The message that triggered the command.
  */
-function cdCommand(contextMsg) {
+function cdCommand(contextMsg, variableList) {
 	// if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("~")) {
 	// 	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
 	// 		const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
@@ -442,13 +472,16 @@ function cdCommand(contextMsg) {
 
 
 	//console.log(pathCorrected);
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		//console.log(i);
 		//console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
 		//console.log(Object.keys(ENV_VAR_LIST)[i]);
 
 		// it doesn't look good
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 	//console.log(pathCorrected);
 
@@ -497,13 +530,15 @@ function replaceAll(str, find, replace) {
  * Create a directory.
  * @param contextMsg - The message object that triggered the command.
  */
-function mkdirCommand(contextMsg) {
+function mkdirCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == "$mkdir") { return; }
 
 	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -547,13 +582,15 @@ function mkdirCommand(contextMsg) {
  * chunks of 2000 characters
  * @param contextMsg - The message object that triggered the command.
  */
-function catCommand(contextMsg) {
+function catCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == "$cat") { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -628,16 +665,18 @@ function wgetCommand(contextMsg) {
  * Copy a file from one path to another
  * @param contextMsg - The message object that triggered the command.
  */
-function cpCommand(contextMsg) {
+function cpCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == undefined) { return; }
 	if (pathCorrected2 == undefined) { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
-		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -676,13 +715,15 @@ function cpCommand(contextMsg) {
  * It deletes an empty directory.
  * @param contextMsg - The message object that triggered the command.
  */
-function rmdirCommand(contextMsg) {
+function rmdirCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == "$rmdir") { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -719,13 +760,15 @@ function rmdirCommand(contextMsg) {
  * It deletes a file or directory.
  * @param contextMsg - The message object that triggered the command.
  */
-function rmCommand(contextMsg) {
+function rmCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == "$rm") { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -808,16 +851,18 @@ function rmCommand(contextMsg) {
  * Move a file from one location to another
  * @param contextMsg - The message object that triggered the command.
  */
-function mvCommand(contextMsg) {
+function mvCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == undefined) { return; }
 	if (pathCorrected2 == undefined) { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
-		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+		pathCorrected2 = replaceAll(pathCorrected2, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -856,13 +901,15 @@ function mvCommand(contextMsg) {
  * Creates a file at the specified path
  * @param contextMsg - The message object that triggered the command.
  */
-function touchCommand(contextMsg) {
+function touchCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == "$touch") { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	if (pathCorrected.startsWith("/")) {
@@ -976,14 +1023,30 @@ function RebootOS(msg) {
 	require.cache[require.resolve("./index.js")].exports.Reboot(msg);
 }
 
-function echoCommand(contextMsg) {
+function echoCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+	console.log(localVarList)
+
 	if (pathCorrected == "$echo") { return; }
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(ENV_VAR_LIST)[i], ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
 	contextMsg.channel.send(pathCorrected);
+}
+
+function readCommand(contextMsg, variableList) {
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+	let filter = m => m.author.id === contextMsg.author.id;
+	contextMsg.channel.awaitMessages(filter, {
+		max: 1
+	})
+		.then(message => {
+			variableList[pathCorrected] = message.content;
+		});
 }
 
 /**
@@ -996,7 +1059,7 @@ function createFakeMessageObject(text) {
 	return messageObject;
 }
 
-client.fakeMessageCreator = createFakeMessageObject;
+
 
 let externalCommandList = {};
 
@@ -1005,77 +1068,83 @@ client.registerExternalCommand = (name, func) => {
 	externalCommandList[name] = func;
 }
 
-function shellFunctionProcessor(messageObject) {
+function shellFunctionProcessor(messageObject, variableList) {
+	if (!variableList)
+		variableList = {}
+
+	if (messageObject.content.startsWith("$"))
+		variableList["$RANDOM"] = getRandomInt(32768);
+
 	if (messageObject.content.startsWith("$apt install")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$apt remove")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$apt update")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$apt list-all")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$apt help")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$apt change-branch")) {
-		aptCommand(messageObject);
+		aptCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$ls")) {
-		lsCommand(messageObject);
+		lsCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$pwd")) {
-		pwdCommand(messageObject);
+		pwdCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$cd")) {
-		cdCommand(messageObject);
+		cdCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$mkdir")) {
-		mkdirCommand(messageObject);
+		mkdirCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$cat")) {
-		catCommand(messageObject);
+		catCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$wget")) {
-		wgetCommand(messageObject);
+		wgetCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$cp")) {
-		cpCommand(messageObject);
+		cpCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$rmdir")) {
-		rmdirCommand(messageObject);
+		rmdirCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$rm")) {
-		rmCommand(messageObject);
+		rmCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$mv")) {
-		mvCommand(messageObject);
+		mvCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$touch")) {
-		touchCommand(messageObject);
+		touchCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$js")) {
-		jsCommand(messageObject);
+		jsCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$cmdlist")) {
@@ -1097,23 +1166,32 @@ function shellFunctionProcessor(messageObject) {
 		return;
 	}
 	if (messageObject.content.startsWith("$echo")) {
-		echoCommand(messageObject);
+		echoCommand(messageObject, variableList);
+		return;
+	}
+	if (messageObject.content.startsWith("$export")) {
+		exportCommand(messageObject);
 		return;
 	}
 	if (messageObject.content.startsWith("$sh")) {
 		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
 			messageObject.channel.send("Error: filename required"); return;
 		}
-		executeShFile(messageObject.content.split(" ")[1], messageObject);
+		executeShFile(messageObject.content.split(" ")[1], messageObject, variableList);
 		return;
 	}
+	// doesn't work because command execution can't be paused
+	// if (messageObject.content.startsWith("$read")) {
+	// 	readCommand(messageObject, variableList);
+	// 	return;
+	// }
 	// console.log(externalCommandList)
 	for (let externalCommandIndex = 0; externalCommandIndex < Object.keys(externalCommandList).length; externalCommandIndex++) {
 		const element = Object.keys(externalCommandList)[externalCommandIndex];
 		// console.log(element);
 		if (element == messageObject.content.split(" ")[0]) {
 			// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
-			externalCommandList[element](messageObject);
+			externalCommandList[element](messageObject, variableList);
 		}
 	}
 }
@@ -1122,20 +1200,193 @@ module.exports.CloseAndUpgrade = function () {
 	UpgradeOS();
 };
 
-function executeShFile(filename, msg) {
+function executeShFile(filename, msg, customVarList) {
 	let fileContent = fs.readFileSync(filename, 'utf-8')
 	let lines = fileContent.split("\n");
+
+	let localVars = {}
+	if (customVarList)
+		localVars = customVarList;
+
+	localVars["$0"] = filename;
+	if (msg) {
+		localVars["$1"] = msg.content.split(" ")[2];
+		localVars["$2"] = msg.content.split(" ")[3];
+		localVars["$3"] = msg.content.split(" ")[4];
+		localVars["$4"] = msg.content.split(" ")[5];
+		localVars["$5"] = msg.content.split(" ")[6];
+		localVars["$6"] = msg.content.split(" ")[7];
+		localVars["$7"] = msg.content.split(" ")[8];
+		localVars["$8"] = msg.content.split(" ")[9];
+		localVars["$9"] = msg.content.split(" ")[10];
+	}
+
+	// let ifs = []
+	// let ifAmount = 0;
 	for (let currentLineIndex = 0; currentLineIndex < lines.length; currentLineIndex++) {
 		const element = lines[currentLineIndex];
 
+		console.log("Current line: " + currentLineIndex)
+
+		if (element.split("=")[1] && !element.startsWith("if [[")) {
+			console.log(element.split("=")[1])
+			console.log(element)
+			if (element.split("=")[1].startsWith("$((") && element.split("=")[1].endsWith("))")) {
+
+				localVars["$" + element.split("=")[0]] = parseMath(element.split("=")[1].split("$((")[1].split("))")[0], localVars);
+				continue;
+			}
+			if (element.split("=")[1].startsWith("$(") && element.split("=")[1].endsWith(")")) {
+				localVars["$" + element.split("=")[0]] = runAndGetOutput(element.split("=")[1].split("$(")[1].split(")")[0], localVars);
+				continue;
+			}
+
+			// console.log(element.split("=")[1].split("$((")[1].split("))")[0])
+
+			if (element.split("=")[1].startsWith("$")) {
+				localVars["$" + element.split("=")[0]] = localVars[element.split("=")[1]];
+				continue;
+			}
+			if (!element.startsWith("$export"))
+				localVars["$" + element.split("=")[0]] = element.split("=")[1];
+			// continue;s
+		}
+
+		// if (element.startsWith("if [[")) {
+
+		// 	ifs[ifAmount] = [];
+		// 	ifs[ifAmount].lines = [];
+		// 	ifs[ifAmount].endingLine = 0;
+		// 	let allVars = { ...ENV_VAR_LIST, ...localVars }
+		// 	let condition = element.split("if [[")[1].split("]]; then")[0]
+		// 	for (let index = 0; index < Object.keys(allVars).length; index++) {
+		// 		condition = condition.replaceAll(Object.keys(allVars)[index], Object.values(allVars)[index])
+		// 	}
+		// 	console.log("Condition: " + condition);
+		// 	if (Function('"use strict";return (' + condition + ')')() == true) {
+		// 		// execute inside if
+		// 		console.log("Condition passed");
+		// 		for (let i = currentLineIndex; i < lines.length; i++) {
+		// 			ifs[ifAmount].lines.push(i);
+		// 			if (ifs[ifAmount - 1]) {
+		// 				ifs[ifAmount - 1].lines.splice(ifs[ifAmount - 1].lines.indexOf(i), 1);
+		// 			}
+		// 			if (lines[i].startsWith("fi #") && lines[i].split("fi #")[1] == ifAmount) {
+		// 				ifs[ifAmount].endingLine = i;
+		// 			}
+		// 		}
+		// 	}
+		// 	else {
+		// 		// execute else (if present)
+		// 	}
+		// 	// console.log(allVars);
+		// 	ifAmount++;
+		// 	continue;
+		// }
+
+		// if (!element.startsWith("if [[")) {
+		// 	for (let ifIndx = 0; ifIndx < ifs.length; ifIndx++) {
+		// 		console.log("Executing...")
+		// 		console.log(ifs);
+		// 		console.log(ifIndx)
+		// 		// for (let lnIndx = 0; lnIndx < ifs[ifIndx].lines.length; lnIndx++) {
+		// 		// 	const lineToCheck = ifs[ifIndx].lines[lnIndx];
+
+		// 		if (ifIndx != 0)
+		// 			ifs[ifIndx - 1].lines.splice(ifs[ifIndx - 1].lines.indexOf(currentLineIndex), 1);
+		// 		// 	if (ifs.length > 1 && ifIndx > 0) {
+
+		// 		// 		if (ifs[ifIndx - 1].lines[lnIndx] == currentLineIndex) {
+		// 		if (ifs[ifIndx].lines.includes(currentLineIndex)) {
+		// 			console.log("test")
 		if (msg) {
 			let msgMod = { "content": element, "channel": msg.channel };
-			shellFunctionProcessor(msgMod);
+			shellFunctionProcessor(msgMod, localVars);
 		}
 		else
-			shellFunctionProcessor(createFakeMessageObject(element));
+			shellFunctionProcessor(createFakeMessageObject(element), localVars);
+		// 		}
+		// 		else {
+		// 			console.log("Reject " + currentLineIndex + ", not in array")
+		// 		}
+		// 		// }
+		// 		// 	}
+		// 		// 	else
+		// 		// 		if (ifs[ifIndx].lines[lnIndx] == currentLineIndex) {
+		// 		// 			if (msg) {
+		// 		// 				let msgMod = { "content": element, "channel": msg.channel };
+		// 		// 				shellFunctionProcessor(msgMod, localVars);
+		// 		// 			}
+		// 		// 			else
+		// 		// 				shellFunctionProcessor(createFakeMessageObject(element), localVars);
+		// 		// 		}
+		// 		// }
+		// 	}
+		// 	if (ifs.length == 0) {
+		// 		if (msg) {
+		// 			let msgMod = { "content": element, "channel": msg.channel };
+		// 			shellFunctionProcessor(msgMod, localVars);
+		// 		}
+		// 		else
+		// 			shellFunctionProcessor(createFakeMessageObject(element), localVars);
+		// 	}
+		// }
+		// console.log(ifIndx)
+		// console.log(ifs);
+
 		//shellFunctionProcessor()
 	}
+}
+
+function runAndGetOutput(msg, variableList) {
+	shellFunctionProcessor(createFakeMessageObject(msg), variableList);
+	return client.commandOutputHistory[0];
+}
+
+function exportCommand(contextMsg, variableList) {
+	console.log("Exporting variable...");
+	ENV_VAR_LIST[contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
+}
+
+let mathChar = [
+	"+",
+	"-",
+	"/",
+	"*",
+	"%"
+]
+
+function parseMath(input, variableList) {
+	// console.log(input);
+	let i = 0;
+	for (let i2 = 0; i2 < input.split("$").length; i2++) {
+		if (!input.includes("$"))
+			break;
+		for (let index = 0; index < mathChar.length; index++) {
+			const element = mathChar[index];
+			// console.log(i)
+			// console.log(input.split("$")[i + 1].replace(/\s/g, '').split(element)[0])
+
+			if (variableList["$" + input.split("$")[i + 1].replace(/\s/g, '').split(element)[0]]) {
+				input = input.replace("$" + input.split("$")[i + 1].replace(/\s/g, '').split(element)[0], variableList["$" + input.split("$")[i + 1].replace(/\s/g, '').split(element)[0]]);
+				// console.log(variableList["$" + input])
+				// console.log(input);
+				i++;
+			}
+			// if (i > 0)
+			// 	return;
+
+		}
+	}
+	// console.log(input);
+	// console.log(input.replace(new RegExp(/^(?=.*[0-9])[- */+%()0-9]+$/gm), '='))
+
+	if (new RegExp(/^(?=.*[0-9])[- */+%()0-9]+$/gm).test(input.replace(/\s/g, ''))) {
+		// if (new RegExp('^[0-9]+$').test(parseInt(input))) {
+		// console.log("ur ok")
+		return Function('"use strict";return (' + input + ')')();
+	}
+	return 0;
 }
 
 client.login(ENV_VAR_BOT_TOKEN);
