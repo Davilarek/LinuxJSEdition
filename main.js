@@ -1593,13 +1593,12 @@ function executeShFile(filename, msg, customVarList) {
 	for (let currentLineIndex = 0; currentLineIndex < lines.length; currentLineIndex++) {
 		const element = lines[currentLineIndex];
 
-		console.log("Current line: " + currentLineIndex)
+		console.log("Executing " + filename + ". Current line: " + currentLineIndex)
 
 		if (element.split("=")[1] && !element.startsWith("if [[")) {
 			// console.log(element.split("=")[1])
 			// console.log(element)
 			if (element.split("=")[1].startsWith("$((") && element.split("=")[1].endsWith("))")) {
-
 				localVars["$" + element.split("=")[0]] = parseMath(element.split("=")[1].split("$((")[1].split("))")[0], localVars);
 				continue;
 			}
@@ -1722,7 +1721,7 @@ function exportCommand(contextMsg, variableList) {
 		contextMsg.channel.send(combined);
 		return;
 	}
-	console.log("Exporting variable...");
+	console.log("Exporting variable " + "$" + contextMsg.content.split(" ")[1].split("=")[0] + "...");
 	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
 }
 
