@@ -1127,6 +1127,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
+	if (messageObject.content.startsWith("$apt what-branch")) {
+		aptCommand(messageObject, variableList);
+		return;
+	}
 	if (messageObject.content.startsWith("$ls")) {
 		lsCommand(messageObject, variableList);
 		return;
