@@ -3,6 +3,7 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
+const executeTimestamp = performance.now()
 const Discord = require('discord.js');
 
 // sounds dangerous
@@ -34,8 +35,14 @@ let ENV_VAR_LIST = {
 function getRandomInt(max) {
 	return Math.floor(Math.random() * max);
 }
+let ENV_VAR_BOT_TOKEN;
+try {
+	ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
+} catch (error) {
+	console.log("No bot token found. Cannot continue.");
+	process.exit(0);
+}
 
-const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
 const ENV_VAR_NULL_CHANNEL = {
@@ -76,10 +83,10 @@ client.on('ready', () => {
 
 	ENV_VAR_STARTUP_NICKNAME = client.user.username;
 	// ENV_VAR_STARTUP_NICKNAME = client.user.username;
-
+	console.log("Startup took " + (performance.now() - executeTimestamp) + "ms.");
 	register();
 
-	getHash();
+	// getHash();
 });
 
 client.cmdList = {
@@ -1673,6 +1680,24 @@ function buildTree(pathToRoot) {
 		}
 	}
 	return root;
+}
+
+const getFileStructure = () => {
+	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "root/.bashrc", "tmp/packageCache", "bin/autorun"]
+}
+
+console.log("Checking file structure...")
+let fileStructureChecksPassed = 0;
+for (let index = 0; index < getFileStructure().length; index++) {
+	const element = getFileStructure()[index];
+
+	if (fs.existsSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + element)) {
+		console.log(index + 1 + " passed out of " + getFileStructure().length);
+		fileStructureChecksPassed++;
+	}
+}
+if (fileStructureChecksPassed != getFileStructure().length) {
+	console.log("File missing, cannot continue."); process.exit(1);
 }
 
 client.login(ENV_VAR_BOT_TOKEN);
