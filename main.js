@@ -54,7 +54,17 @@ const ENV_VAR_NULL_CHANNEL = {
 		}
 	}
 };
+const ENV_VAR_NULL_GUILD = {
+	me: {
+		setNickname: function (text) {
+			if (client.safeClient["bootChannel"] != null) {
+				client.safeClient["bootChannel"].guild.me.setNickname(text);
+			}
+		}
+	}
+}
 let ENV_VAR_VERSION = 0;
+let ENV_VAR_STARTUP_NICKNAME;
 getVersion().then(v => {
 	ENV_VAR_VERSION = v;
 });
@@ -63,6 +73,10 @@ client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
 	client.user.setActivity("Linux JS Edition testing...");
 	process.chdir('VirtualDrive');
+
+	ENV_VAR_STARTUP_NICKNAME = client.user.username;
+	// ENV_VAR_STARTUP_NICKNAME = client.user.username;
+
 	register();
 
 	getHash();
@@ -70,7 +84,8 @@ client.on('ready', () => {
 
 client.cmdList = {
 	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
-	"ls": `display files in current directory.`,
+	"ls": `display files in directory.`,
+	"tree": `displays the folder and file structure of a path`,
 	"pwd": `print working directory.`,
 	"cd": `change directory.`,
 	"mkdir": `make directory`,
@@ -122,6 +137,8 @@ client.safeClient = {
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand
 }
+
+client.safeClient["bootChannel"] = null;
 
 // very unsafe
 // exports.cli = client;
@@ -186,6 +203,7 @@ function register() {
 		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
 		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + ENV_VAR_VERSION + "-amd64`");
+			client.safeClient["bootChannel"] = message.channel;
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				console.log(file);
 				if (file == "empty.txt") { return; }
@@ -484,6 +502,66 @@ function lsCommand(contextMsg, variableList) {
 	}
 }
 
+function treeCommand(contextMsg, variableList) {
+	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+
+	if (pathCorrected == "$tree") { pathCorrected = process.cwd() }
+
+	// console.log(pathCorrected);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+	if (fs.existsSync(pathCorrected)) {
+		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
+			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
+			contextMsg.channel.send("Error: cannot access this path.");
+		}
+		else {
+			// console.log((new Array(level + 1)).join(" "))
+			contextMsg.channel.send("```\n" + readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + "\n```");
+		}
+	}
+	else {
+		contextMsg.channel.send("Error: directory doesn't exist.");
+	}
+}
+
+function readTree(tree, level) {
+	let final = "";
+	// console.log(tree.children);
+	// console.log(tree.path);
+	// console.log(tree.path.split("/").length)
+	if (tree.path.split("/").length == 1 || tree.path.split("/")[tree.path.split("/").length - 1] == "")
+		final += (new Array(level)).join("─") + "/:" + "\n"
+	else if (tree.path)
+		final += (new Array(level + 1)).join(" ") + "└─" + (new Array(level + 1)).join("─") + tree.path.split("/")[tree.path.split("/").length - 1] + "\n"
+	if (tree.children)
+		for (let index = 0; index < tree.children.length; index++) {
+			const element = tree.children[index];
+			// console.log(element.path.split("/")[element.path.split("/").length - 1])
+			// final += (new Array(level + 1)).join("-") + element.path.split("/")[element.path.split("/").length - 1]
+			if (element.children) {
+				// final +=  readTree(element.children, level + 1) + "\n";
+				// console.log(element.children)
+				if (!element.children)
+					final += readTree(element, level + 1) + "\n";
+				else
+					final += readTree(element, level + 1);
+			}
+		}
+	return final;
+}
+
 /**
  * It returns the current working directory.
  * @param contextMsg - The message that triggered the command.
@@ -551,6 +629,14 @@ function cdCommand(contextMsg, variableList) {
 			const stat = fs.lstatSync(pathCorrected);
 			if (stat.isFile() != true) {
 				process.chdir(pathCorrected);
+				let pwd = runAndGetOutput("$pwd", localVarList)
+				// console.log(pwd.length);
+				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
+				// console.log(pwd.split("/")[pwd.split("/").length - 1])
+				if ((ENV_VAR_STARTUP_NICKNAME.length + pwd.length) < 31)
+					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd + "]");
+				else
+					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd.split("/")[pwd.split("/").length - 1] + "]");
 			}
 			else {
 				contextMsg.channel.send("Error: given path is not an directory.");
@@ -1110,11 +1196,9 @@ function readCommand(contextMsg, variableList) {
  * @returns A message object with the content of the text and the channel of the null channel.
  */
 function createFakeMessageObject(text) {
-	let messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL }
+	let messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL, "guild": ENV_VAR_NULL_GUILD }
 	return messageObject;
 }
-
-
 
 let externalCommandList = {};
 
@@ -1157,6 +1241,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 	}
 	if (messageObject.content.startsWith("$ls")) {
 		lsCommand(messageObject, variableList);
+		return;
+	}
+	if (messageObject.content.startsWith("$tree")) {
+		treeCommand(messageObject, variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$pwd")) {
@@ -1462,6 +1550,39 @@ function parseMath(input, variableList) {
 		return Function('"use strict";return (' + input + ')')();
 	}
 	return 0;
+}
+
+// tree command
+class TreeNode {
+	constructor(path) {
+		this.path = path;
+		this.children = [];
+	}
+}
+
+function buildTree(pathToRoot) {
+	const root = new TreeNode(pathToRoot);
+
+	const stack = [root];
+
+	while (stack.length) {
+		const currentNode = stack.pop();
+
+		if (currentNode) {
+			const children = fs.readdirSync(currentNode.path);
+
+			for (let child of children) {
+				const childPath = `${currentNode.path}/${child}`;
+				const childNode = new TreeNode(childPath);
+				currentNode.children.push(childNode);
+
+				if (fs.statSync(childNode.path).isDirectory()) {
+					stack.push(childNode);
+				}
+			}
+		}
+	}
+	return root;
 }
 
 client.login(ENV_VAR_BOT_TOKEN);
