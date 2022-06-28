@@ -45,6 +45,7 @@ try {
 
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
+const ENV_VAR_APT_LOG_LOCATION = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "var" + path.sep + "log" + path.sep + "apt";
 const ENV_VAR_NULL_CHANNEL = {
 	/** 
 	 * @param {string} content
@@ -250,6 +251,7 @@ function getHash() {
  * (Re-)register all commands.
  */
 function register() {
+	console.log("Registering commands...")
 	client.on("message", (message) => {
 		if (message.author.bot) return;
 		//console.log("test");
@@ -300,6 +302,7 @@ function register() {
 		// else if ()
 		// 	shellFunctionProcessor(message);
 	});
+	console.log("Registered about " + Object.keys(client.safeClient.cmdList).length + " commands.")
 }
 
 /**
@@ -325,6 +328,10 @@ function aptCommand(contextMsg) {
 		var parsed = url.parse(makeURL);
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
 		let download = null
+		/**
+		 * @type {UpgradedPackage[]}
+		 */
+		let packagesInstalled = [];
 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
 		}
@@ -347,11 +354,14 @@ function aptCommand(contextMsg) {
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 				mod = requireUncached(pFile);
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+				packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
+
 				updatedCount += 1;
 				contextMsg.channel.send("Done").then(v => {
 					var end = performance.now();
 					var time = end - start;
 					contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+					makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled))
 				});
 			});
 		});
@@ -368,6 +378,10 @@ function aptCommand(contextMsg) {
 		let updatedCount = 0;
 		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		let removeDir = null
+		/**
+		 * @type {UpgradedPackage[]}
+		 */
+		let packagesRemoved = [];
 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
 		}
@@ -377,6 +391,9 @@ function aptCommand(contextMsg) {
 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
 			//delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
+			let package = requireUncached(removeDir + path.sep + removeNameNormalize + "-install.js");
+			packagesRemoved.push(new UpgradedPackage(package.Version, package.Version, removeNameNormalize, ""));
+
 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 
 			client.removeAllListeners("message");
@@ -386,6 +403,7 @@ function aptCommand(contextMsg) {
 				try {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+
 				} catch (error) {
 					contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
 				}
@@ -394,7 +412,8 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
 				var end = performance.now();
 				var time = end - start;
-				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+				contextMsg.channel.send(updatedCount + " package(s) were removed in " + parseInt(time).toFixed() + "ms.");
+				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("remove", start, end, packagesRemoved))
 			});
 		}
 		else {
@@ -412,6 +431,10 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
 		let githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
 		let start = performance.now();
+		/**
+		 * @type {UpgradedPackage[]}
+		 */
+		let updatesInstalled = [];
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
@@ -425,6 +448,7 @@ function aptCommand(contextMsg) {
 					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
 					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
 					contextMsg.channel.send("Done.");
+					updatesInstalled.push(new UpgradedPackage(packageOld.Version, package.Version, file.replace("-install.js", ""), makeURL));
 					updatedCount += 1;
 					finished = true;
 				}
@@ -451,6 +475,7 @@ function aptCommand(contextMsg) {
 			var end = performance.now();
 			var time = end - start;
 			contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+			makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
 		});
 	}
 
@@ -501,6 +526,65 @@ function aptCommand(contextMsg) {
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
 		contextMsg.channel.send(fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1]);
 	}
+}
+/**
+ * 
+ * @param {*} action 
+ * @param {*} starttime 
+ * @param {*} endtime 
+ * @param {UpgradedPackage[]} packagesAffected 
+ * @returns 
+ */
+function aptLog(action, starttime, endtime, packagesAffected) {
+	let final = []
+	var d = new Date(performance.timeOrigin + starttime);
+	var d2 = new Date(performance.timeOrigin + endtime);
+	final[0] = "\nStart-Date: " + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "  " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+	final[1] = "Commandline: " + "apt " + action;
+
+	switch (action) {
+		case "update":
+			{
+				let upgradeText = [];
+				for (let i = 0; i < packagesAffected.length; i++) {
+					const element = packagesAffected[i];
+					upgradeText.push(element.name + "(" + element.oldVersion + ", " + element.newVersion + ")")
+				}
+				final[2] = "Upgrade: " + upgradeText.join(", ")
+			}
+			break;
+
+		case "install":
+			{
+				let installText = [];
+				for (let i = 0; i < packagesAffected.length; i++) {
+					const element = packagesAffected[i];
+					installText.push(element.name + "(" + element.newVersion + ")")
+				}
+				final[2] = "Install: " + installText.join(", ")
+			}
+			break;
+		case "remove":
+			{
+				let removeText = [];
+				for (let i = 0; i < packagesAffected.length; i++) {
+					const element = packagesAffected[i];
+					removeText.push(element.name + "(" + element.newVersion + ")")
+				}
+				final[2] = "Remove: " + removeText.join(", ")
+			}
+			break;
+		default:
+			break;
+	}
+	final[3] = "End-Date: " + d2.getFullYear() + "-" + d2.getMonth() + "-" + d2.getDate() + "  " + d2.getHours() + ":" + d2.getMinutes() + ":" + d2.getSeconds();
+	return final.join("\n");
+}
+
+function makeLogFile(filename, data) {
+	if (!fs.existsSync(path.dirname(filename)))
+		fs.mkdirSync(path.dirname(filename), { recursive: true });
+	fs.appendFileSync(filename, "\n" + data);
 }
 
 /**
@@ -1718,6 +1802,16 @@ function buildTree(pathToRoot) {
 		}
 	}
 	return root;
+}
+
+//apt upgrade
+class UpgradedPackage {
+	constructor(oldVersion, newVersion, name, url) {
+		this.oldVersion = oldVersion;
+		this.newVersion = newVersion;
+		this.name = name;
+		this.url = url;
+	}
 }
 
 const getFileStructure = () => {
