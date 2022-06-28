@@ -528,7 +528,12 @@ function treeCommand(contextMsg, variableList) {
 		}
 		else {
 			// console.log((new Array(level + 1)).join(" "))
-			contextMsg.channel.send("```\n" + readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + "\n```");
+			var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0);
+			for (let i = 0; i < str.length; i += 1800) {
+				const toSend = str.substring(i, Math.min(str.length, i + 1800));
+				contextMsg.channel.send("```\n" + toSend + "\n```");
+			}
+			// contextMsg.channel.send("```\n" +  + "\n```", { split: true });
 		}
 	}
 	else {
@@ -678,7 +683,7 @@ function mkdirCommand(contextMsg, variableList) {
 
 	if (pathCorrected == "$mkdir") { return; }
 
-	for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
 
@@ -699,21 +704,54 @@ function mkdirCommand(contextMsg, variableList) {
 	// 	}
 	// }
 
+	// console.log(pathCorrected);
+
 	if (!path.resolve(pathCorrected).includes("VirtualDrive") || path.basename(pathCorrected) == "VirtualDrive" || pathCorrected.endsWith("..") || pathCorrected.endsWith(path.sep) || pathCorrected.endsWith("/")) {
 		contextMsg.channel.send("Error: cannot create directory.");
 	}
 	else {
-		if (!fs.existsSync(pathCorrected)) {
-			try {
-				fs.mkdirSync(pathCorrected);
-				contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
-			} catch (error) {
-				contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
+		// console.log(pathCorrected);
+
+		if (pathCorrected.startsWith("-")) {
+			const msgSplit = pathCorrected.split(" ");
+			if (!msgSplit[1]) {
+				contextMsg.channel.send("Error: no file or directory specified.");
+				return;
+			}
+			if (!path.resolve(msgSplit[1]).includes("VirtualDrive") || path.basename(pathCorrected) == "VirtualDrive" || msgSplit[1].includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes(path.basename(path.resolve(msgSplit[1])))) {
+				contextMsg.channel.send("Error: cannot access this path.");
+			}
+			else {
+				if (msgSplit[0] == "-p") {
+					pathCorrected = msgSplit[1];
+					console.log(pathCorrected);
+					if (!fs.existsSync(pathCorrected)) {
+						try {
+							fs.mkdirSync(pathCorrected, { recursive: true });
+							contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
+						} catch (error) {
+							console.log(error)
+							contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
+						}
+					}
+					else {
+						contextMsg.channel.send("Error: directory already exists.");
+					}
+				}
 			}
 		}
-		else {
-			contextMsg.channel.send("Error: directory already exists.");
-		}
+		else
+			if (!fs.existsSync(pathCorrected)) {
+				try {
+					fs.mkdirSync(pathCorrected);
+					contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
+				} catch (error) {
+					contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
+				}
+			}
+			else {
+				contextMsg.channel.send("Error: directory already exists.");
+			}
 	}
 }
 
@@ -1325,9 +1363,34 @@ function shellFunctionProcessor(messageObject, variableList) {
 		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
 			messageObject.channel.send("Error: filename required"); return;
 		}
-		executeShFile(messageObject.content.split(" ")[1], messageObject, variableList);
+
+		let pathCorrected = messageObject.content.split(" ")[1];
+
+		if (pathCorrected == "$sh") { return; }
+
+		// console.log(pathCorrected);
+
+		let localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+		for (let i = 0; i < Object.keys(localVarList).length; i++) {
+			pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+		}
+
+		if (pathCorrected.startsWith("/")) {
+			pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+		}
+		if (fs.existsSync(pathCorrected)) {
+			if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
+				// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
+				messageObject.channel.send("Error: cannot access this path.");
+			}
+			else {
+				executeShFile(pathCorrected, messageObject, variableList);
+			}
+		}
 		return;
 	}
+
 	// doesn't work because command execution can't be paused
 	// if (messageObject.content.startsWith("$read")) {
 	// 	readCommand(messageObject, variableList);
@@ -1448,7 +1511,7 @@ function executeShFile(filename, msg, customVarList) {
 		// 		if (ifs[ifIndx].lines.includes(currentLineIndex)) {
 		// 			console.log("test")
 		if (msg) {
-			let msgMod = { "content": element, "channel": msg.channel };
+			let msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
 			shellFunctionProcessor(msgMod, localVars);
 		}
 		else
