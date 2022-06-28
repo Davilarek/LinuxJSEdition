@@ -173,7 +173,34 @@ async function getAllRepoPackages() {
 	for (let i = 0; i < tree.length; i++) {
 		if (path.extname(tree[i].path) != ".js") { continue; }
 		//console.log(tree[i].path);
-		packages.push(tree[i].path.replace("-install.js", ""));
+		let ready = tree[i].path.replace("-install.js", "")
+		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+			// console.log(file);
+			if (file == "empty.txt") { return; }
+			// let addInstalled = false;
+			// console.log(file)
+			if (tree[i].path != file)
+				return;
+			// console.log(addInstalled)
+
+			let package
+			try {
+				package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+				package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+			} catch (error) {
+				// message.channel.send("An unexpected error occured while trying to run package: " + file);
+				console.log(error);
+			}
+			// if (addInstalled) {
+			ready += "/" + package.Version + " [installed]";
+			// }
+			// else {
+			// }
+		});
+		if (!ready.endsWith("[installed]"))
+			ready += "/unknown version";
+		// console.log(ready)
+		packages.push(ready);
 	}
 	return packages;
 }
@@ -405,7 +432,7 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send("Collecting data from repository...").then(v => {
 			getAllRepoPackages().then(v => {
 				contextMsg.channel.send(v.join("\n"));
-				contextMsg.channel.send("Done.");
+				// contextMsg.channel.send("Done.");
 			});
 		})
 	}
