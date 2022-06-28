@@ -504,7 +504,7 @@ function lsCommand(contextMsg, variableList) {
 
 	if (pathCorrected == "$ls") { pathCorrected = "." }
 
-	console.log(pathCorrected);
+	// console.log(pathCorrected);
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
