@@ -502,7 +502,7 @@ function lsCommand(contextMsg, variableList) {
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == "$ls") { pathCorrected = process.cwd() }
+	if (pathCorrected == "$ls") { pathCorrected = "." }
 
 	console.log(pathCorrected);
 
