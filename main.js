@@ -188,7 +188,7 @@ async function getAllRepoPackages() {
 				package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 				package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
 			} catch (error) {
-				// message.channel.send("An unexpected error occured while trying to run package: " + file);
+				// message.channel.send("An unexpected error occurred while trying to run package: " + file);
 				console.log(error);
 			}
 			// if (addInstalled) {
@@ -238,7 +238,7 @@ function register() {
 					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
-					message.channel.send("An unexpected error occured while trying to run package: " + file);
+					message.channel.send("An unexpected error occurred while trying to run package: " + file);
 					console.log(error);
 				}
 
@@ -289,8 +289,8 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send("Reading config...");
 		let branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		let gitUrlhName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
-		let makeURL = gitUrlhName + branchName + "/" + downloadNameNormalize + "-install.js";
+		let githubRepoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
+		let makeURL = githubRepoUrl + branchName + "/" + downloadNameNormalize + "-install.js";
 		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
@@ -359,7 +359,7 @@ function aptCommand(contextMsg) {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
-					contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
+					contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
 				}
 			});
 			updatedCount += 1;
@@ -382,12 +382,12 @@ function aptCommand(contextMsg) {
 		let updatedCount = 0;
 		let branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		let gitUrlhName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+		let githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
 		let start = performance.now();
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-			let makeURL = gitUrlhName + branchName + "/" + file;
+			let makeURL = githubRepoUrl + branchName + "/" + file;
 			let download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
 			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
 			download.on('end', function (output) {
@@ -415,7 +415,7 @@ function aptCommand(contextMsg) {
 					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				} catch (error) {
-					//contextMsg.channel.send("An unexpected error occured while trying to run package: " + file);
+					//contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
 				}
 			});
 		}
@@ -1358,12 +1358,12 @@ function shellFunctionProcessor(messageObject, variableList) {
 	}
 	if (messageObject.content.startsWith("$cmdlist")) {
 		// format = 'name' - 'description'
-		let cmdlist = "";
+		let commandList = "";
 		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
-			cmdlist += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
+			commandList += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
 		}
-		console.log(cmdlist);
-		messageObject.channel.send(cmdlist);
+		console.log(commandList);
+		messageObject.channel.send(commandList);
 		return;
 	}
 	if (messageObject.content.startsWith("$upgrade-os")) {
