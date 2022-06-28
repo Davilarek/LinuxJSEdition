@@ -444,20 +444,44 @@ function requireUncached(module) {
  * It lists the files in the current directory.
  * @param contextMsg - The message that triggered the command.
  */
-function lsCommand(contextMsg) {
+function lsCommand(contextMsg, variableList) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 
-	
+	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	fs.readdir(process.cwd(), (err, files) => {
-		if (!files.length) {
-			contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
+	if (pathCorrected == "$ls") { pathCorrected = process.cwd() }
+
+	// console.log(pathCorrected);
+
+	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+	}
+
+	if (pathCorrected.startsWith("/")) {
+		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+	}
+	if (fs.existsSync(pathCorrected)) {
+		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
+			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
+			contextMsg.channel.send("Error: cannot access this path.");
 		}
 		else {
-			contextMsg.channel.send(files.join(', '));
+			fs.readdir(pathCorrected, (err, files) => {
+				if (!files.length) {
+					contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
+				}
+				else {
+					contextMsg.channel.send(files.join(', '));
+				}
+			});
 		}
-	});
+	}
+	else {
+		contextMsg.channel.send("Error: directory doesn't exist.");
+	}
 }
 
 /**
