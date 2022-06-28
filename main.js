@@ -61,6 +61,23 @@ const ENV_VAR_NULL_CHANNEL = {
 		}
 	}
 };
+const ENV_VAR_CONSOLE_CHANNEL = {
+	/** 
+	 * @param {string} content
+	*/
+	send: function (content) {
+		client.commandOutputHistory[0] = content;
+		console.log(content);
+		content = null;
+		return {
+			"then": (v) => {
+				// v = null;
+				// console.log(v);
+				// v();
+			}
+		}
+	}
+}
 const ENV_VAR_NULL_GUILD = {
 	me: {
 		setNickname: function (text) {
@@ -108,6 +125,7 @@ client.cmdList = {
 	"reboot": `reboots os`,
 	"sh": `runs a file executing every line with command from this list.`,
 	"echo": 'simple echo command. supports variables',
+	"secho": 'silent echo, prints to console',
 	"export": 'makes a variable global',
 	"whoami": `displays current user (always root)`
 }
@@ -1273,6 +1291,11 @@ function createFakeMessageObject(text) {
 	return messageObject;
 }
 
+function createConsoleMessageObject(text) {
+	let messageObject = { "content": text, "channel": ENV_VAR_CONSOLE_CHANNEL, "guild": ENV_VAR_NULL_GUILD }
+	return messageObject;
+}
+
 let externalCommandList = {};
 
 
@@ -1384,6 +1407,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 	}
 	if (messageObject.content.startsWith("$echo")) {
 		echoCommand(messageObject, variableList);
+		return;
+	}
+	if (messageObject.content.startsWith("$secho")) {
+		echoCommand(createConsoleMessageObject(messageObject.content), variableList);
 		return;
 	}
 	if (messageObject.content.startsWith("$export")) {
