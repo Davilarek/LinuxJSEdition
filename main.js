@@ -921,7 +921,7 @@ function catCommand(contextMsg, variableList) {
 	else {
 		if (fs.existsSync(pathCorrected)) {
 			const stat = fs.lstatSync(pathCorrected);
-			console.log(stat.size);
+			// console.log(stat.size);
 			if (stat.isFile()) {
 				if (stat.size == 0) {
 					contextMsg.channel.send("`file is empty`");
@@ -1596,8 +1596,8 @@ function executeShFile(filename, msg, customVarList) {
 		console.log("Current line: " + currentLineIndex)
 
 		if (element.split("=")[1] && !element.startsWith("if [[")) {
-			console.log(element.split("=")[1])
-			console.log(element)
+			// console.log(element.split("=")[1])
+			// console.log(element)
 			if (element.split("=")[1].startsWith("$((") && element.split("=")[1].endsWith("))")) {
 
 				localVars["$" + element.split("=")[0]] = parseMath(element.split("=")[1].split("$((")[1].split("))")[0], localVars);
