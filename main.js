@@ -394,7 +394,7 @@ function aptCommand(contextMsg) {
 
 
 	if (contextMsg.content.split(" ")[1] == "help") {
-		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`");
+		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`\n`what-branch` - `show currently used branch`");
 	}
 
 	if (contextMsg.content.split(" ")[1] == "change-branch") {
@@ -424,6 +424,10 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send("Done.");
 		shellFunctionProcessor({ "content": "$cat /root/.config", "channel": contextMsg.channel });
 	}
+	if (contextMsg.content.split(" ")[1] == "what-branch") {
+		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+		contextMsg.channel.send(fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1]);
+	}
 }
 
 /**
@@ -443,6 +447,9 @@ function requireUncached(module) {
 function lsCommand(contextMsg) {
 	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+
+	
+
 	fs.readdir(process.cwd(), (err, files) => {
 		if (!files.length) {
 			contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
