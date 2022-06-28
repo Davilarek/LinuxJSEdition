@@ -5,6 +5,7 @@
 
 const Discord = require('discord.js');
 
+// sounds dangerous
 var open = Discord.TextChannel.prototype.send;
 
 function openReplacement(text) {
@@ -27,6 +28,7 @@ const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "
 let ENV_VAR_LIST = {
 	"$HOME": "/root",
 	"~": "/root",
+	"USER": "root"
 }
 
 function getRandomInt(max) {
@@ -82,7 +84,9 @@ client.cmdList = {
 	"js": `execute js file from bin directory`,
 	"upgrade-os": `upgrade everything and re-download the os`,
 	"reboot": `reboots os`,
-	"sh": `runs a file executing every line with command from this list.`
+	"sh": `runs a file executing every line with command from this list.`,
+	"echo": 'simple echo command. supports variables',
+	"export": 'makes a variable global'
 }
 
 client.enableStdin = true;
@@ -176,10 +180,11 @@ function register() {
 				}
 
 			});
-			cdCommand({
-				content: "$cd $HOME",
-				channel: ENV_VAR_NULL_CHANNEL
-			})
+			// cdCommand({
+			// 	content: "$cd $HOME",
+			// 	channel: ENV_VAR_NULL_CHANNEL
+			// })
+			shellFunctionProcessor(createFakeMessageObject("$cd $HOME"));
 			executeShFile(".bashrc");
 			ENV_VAR_BOOT_COMPLETE = true;
 			client.commandHistory.push("$boot");
@@ -435,11 +440,12 @@ function lsCommand(contextMsg) {
  * @param contextMsg - The message that triggered the command.
  */
 function pwdCommand(contextMsg) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '/');
+	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
-	// if (pathWithoutDrive == "") {
-	// 	pathWithoutDrive = "\\";
-	// }
+	if (pathWithoutDrive == "") {
+		pathWithoutDrive = "/";
+	}
+	// console.log(pathWithoutDrive)
 	contextMsg.channel.send(pathWithoutDrive)
 }
 
@@ -1344,8 +1350,19 @@ function runAndGetOutput(msg, variableList) {
 }
 
 function exportCommand(contextMsg, variableList) {
+	if (!contextMsg.content.split(" ")[1]) {
+		let combined = "";
+		for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+			const element = Object.keys(ENV_VAR_LIST)[i];
+			if (element == "~")
+				continue;
+			combined += "export " + element.replace("$", '') + "=" + Object.values(ENV_VAR_LIST)[i] + "\n";
+		}
+		contextMsg.channel.send(combined);
+		return;
+	}
 	console.log("Exporting variable...");
-	ENV_VAR_LIST[contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
+	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
 }
 
 let mathChar = [
