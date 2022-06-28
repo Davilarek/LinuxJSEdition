@@ -19,6 +19,8 @@ VirtualDrive/bin/autorun/*.*
 !VirtualDrive/bin/autorun/empty.txt
 VirtualDrive/tmp/packageCache/*.*
 !VirtualDrive/tmp/packageCache/empty.txt
+!VirtualDrive/var/log/*
+!VirtualDrive/var/log/*.*
 .vscode/*/*.*
 .vscode/*.*
 node_modules
