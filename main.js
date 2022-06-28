@@ -239,8 +239,8 @@ function register() {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + ENV_VAR_VERSION + "-amd64`");
 			client.safeClient["bootChannel"] = message.channel;
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-				console.log(file);
 				if (file == "empty.txt") { return; }
+				console.log("Loading " + file + "...");
 				try {
 					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
@@ -255,7 +255,8 @@ function register() {
 			// 	channel: ENV_VAR_NULL_CHANNEL
 			// })
 			shellFunctionProcessor(createFakeMessageObject("$cd $HOME"));
-			executeShFile(".bashrc", message);
+			if (fs.existsSync(".bashrc"))
+				executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
 			client.commandHistory.push("$boot");
 			return;
@@ -1683,7 +1684,7 @@ function buildTree(pathToRoot) {
 }
 
 const getFileStructure = () => {
-	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "root/.bashrc", "tmp/packageCache", "bin/autorun"]
+	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun"]
 }
 
 console.log("Checking file structure...")
