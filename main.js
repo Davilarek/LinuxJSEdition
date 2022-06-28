@@ -107,6 +107,8 @@ client.on('ready', () => {
 });
 
 client.cmdList = {
+	"cmdlist": `displays list of available commands and description`,
+	"cmdinfo": `shows description of provided command (use without $ sign)`,
 	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
 	"ls": `display files in directory.`,
 	"tree": `displays the folder and file structure of a path`,
@@ -1393,8 +1395,16 @@ function shellFunctionProcessor(messageObject, variableList) {
 		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
 			commandList += "`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n";
 		}
-		console.log(commandList);
+		// console.log(commandList);
 		messageObject.channel.send(commandList);
+		return;
+	}
+	if (messageObject.content.startsWith("$cmdinfo")) {
+		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
+			if (Object.keys(client.cmdList)[i] == messageObject.content.split(" ")[1]) {
+				messageObject.channel.send("`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n");
+			}
+		}
 		return;
 	}
 	if (messageObject.content.startsWith("$upgrade-os")) {
