@@ -1511,6 +1511,38 @@ function shellFunctionProcessor(messageObject, variableList) {
 		exportCommand(messageObject);
 		return;
 	}
+	// inline sh
+	if (messageObject.content.startsWith("$ish")) {
+		// console.log(messageObject.content);
+		if (messageObject.content.split("\n")[1].startsWith("```") && messageObject.content.split("\n")[1].endsWith("```")) {
+			//console.log(messageObject.content.split("\n")[2]);
+			let lines = []
+			for (let i = 2; i < messageObject.content.split("\n").length; i++) {
+				if (messageObject.content.split("\n")[i].startsWith("```"))
+					break;
+				lines.push(messageObject.content.split("\n")[i]);
+			}
+			// create random temp filename
+			let tempFileName = ENV_VAR_APT_PROTECTED_DIR + path.sep;
+			for (let i = 0; i < 10; i++) {
+				tempFileName += getRandomInt(10);
+			}
+			// lines.push("$rm -rf " + tempFileName);
+			// write temp file
+			
+			//create file
+			fs.writeFileSync(tempFileName, lines.join("\n"));
+			
+			// shellFunctionProcessor(createFakeMessageObject("$touch " + tempFileName))
+			// fs.writeFileSync(tempFileName, lines.join("\n"));
+
+
+
+			// run temp file
+			executeShFile(tempFileName, messageObject, variableList);
+			fs.rmSync(tempFileName);
+		}
+	}
 	if (messageObject.content.startsWith("$whoami")) {
 		whoamiCommand(messageObject);
 		return;
