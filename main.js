@@ -151,8 +151,14 @@ client.coolTools = {
 }
 
 /* Registering an external command. */
-client.registerExternalCommand = (name, func) => {
-	externalCommandList[name] = func;
+client.registerExternalCommand = (name, func, description) => {
+
+	if (name.startsWith("$"))
+		name = name.substring(1);
+	externalCommandList["$" + name] = func;
+	if (description)
+		client.safeClient.cmdList[name] = description;
+	console.log("Registered external command: " + name);
 }
 
 client.safeClient = {
