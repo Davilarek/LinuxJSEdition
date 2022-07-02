@@ -1529,10 +1529,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 			}
 			// lines.push("$rm -rf " + tempFileName);
 			// write temp file
-			
+
 			//create file
 			fs.writeFileSync(tempFileName, lines.join("\n"));
-			
+
 			// shellFunctionProcessor(createFakeMessageObject("$touch " + tempFileName))
 			// fs.writeFileSync(tempFileName, lines.join("\n"));
 
