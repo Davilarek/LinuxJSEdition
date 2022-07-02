@@ -88,6 +88,7 @@ const ENV_VAR_NULL_GUILD = {
 		}
 	}
 }
+const ENV_VAR_PREFIX = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "prefix.txt", 'utf8');
 let ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
 getVersion().then(v => {
@@ -109,7 +110,7 @@ client.on('ready', () => {
 
 client.cmdList = {
 	"cmdlist": `displays list of available commands and description`,
-	"cmdinfo": `shows description of provided command (use without $ sign)`,
+	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
 	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
 	"ls": `display files in directory.`,
 	"tree": `displays the folder and file structure of a path`,
@@ -153,9 +154,11 @@ client.coolTools = {
 /* Registering an external command. */
 client.registerExternalCommand = (name, func, description) => {
 
-	if (name.startsWith("$"))
-		name = name.substring(1);
-	externalCommandList["$" + name] = func;
+	// if (name.startsWith("$"))
+	// 	name = name.substring(1);
+	if (name.startsWith(ENV_VAR_PREFIX))
+		name = name.split(ENV_VAR_PREFIX)[1];
+	externalCommandList[ENV_VAR_PREFIX + name] = func;
 	if (description)
 		client.safeClient.cmdList[name] = description;
 	console.log("Registered external command: " + name);
@@ -264,7 +267,7 @@ function register() {
 		//console.log("test");
 
 		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
-		if (message.content == "$boot" && !ENV_VAR_BOOT_COMPLETE) {
+		if (message.content == ENV_VAR_PREFIX + "boot" && !ENV_VAR_BOOT_COMPLETE) {
 			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + ENV_VAR_VERSION + "-amd64`");
 			client.safeClient["bootChannel"] = message.channel;
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
@@ -283,18 +286,18 @@ function register() {
 			// 	content: "$cd $HOME",
 			// 	channel: ENV_VAR_NULL_CHANNEL
 			// })
-			shellFunctionProcessor(createFakeMessageObject("$cd $HOME"));
+			shellFunctionProcessor(createFakeMessageObject(ENV_VAR_PREFIX + "cd $HOME"));
 			if (fs.existsSync(".bashrc"))
 				executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
-			client.commandHistory.push("$boot");
+			client.commandHistory.push(ENV_VAR_PREFIX + "boot");
 			return;
 		}
 
 		// bot isn't booted, go back
 		if (!ENV_VAR_BOOT_COMPLETE) return;
 
-		if (message.content.startsWith("$"))
+		if (message.content.startsWith(ENV_VAR_PREFIX))
 			client.commandHistory.push(message.content);
 
 		// console.log(client.enableStdin)
@@ -527,7 +530,7 @@ function aptCommand(contextMsg) {
 		// console.log(final);
 		fs.writeFileSync(BASEDIR + "root" + path.sep + ".config", final);
 		contextMsg.channel.send("Done.");
-		shellFunctionProcessor({ "content": "$cat /root/.config", "channel": contextMsg.channel });
+		shellFunctionProcessor({ "content": ENV_VAR_PREFIX + "cat /root/.config", "channel": contextMsg.channel });
 	}
 	if (contextMsg.content.split(" ")[1] == "what-branch") {
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
@@ -614,7 +617,7 @@ function lsCommand(contextMsg, variableList) {
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == "$ls") { pathCorrected = "." }
+	if (pathCorrected == ENV_VAR_PREFIX + "ls") { pathCorrected = "." }
 
 	// console.log(pathCorrected);
 
@@ -654,7 +657,7 @@ function treeCommand(contextMsg, variableList) {
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == "$tree") { pathCorrected = process.cwd() }
+	if (pathCorrected == ENV_VAR_PREFIX + "tree") { pathCorrected = process.cwd() }
 
 	// console.log(pathCorrected);
 
@@ -748,7 +751,7 @@ function cdCommand(contextMsg, variableList) {
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == "$cd") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "cd") { return; }
 
 	//console.log("test")
 
@@ -780,7 +783,7 @@ function cdCommand(contextMsg, variableList) {
 			const stat = fs.lstatSync(pathCorrected);
 			if (stat.isFile() != true) {
 				process.chdir(pathCorrected);
-				let pwd = runAndGetOutput("$pwd", localVarList)
+				let pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList)
 				// console.log(pwd.length);
 				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
 				// console.log(pwd.split("/")[pwd.split("/").length - 1])
@@ -827,7 +830,7 @@ function mkdirCommand(contextMsg, variableList) {
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	if (pathCorrected == "$mkdir") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "mkdir") { return; }
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -912,7 +915,7 @@ function catCommand(contextMsg, variableList) {
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	if (pathCorrected == "$cat") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "cat") { return; }
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -968,7 +971,7 @@ function catCommand(contextMsg, variableList) {
  * @param contextMsg - The message object that triggered the command.
  */
 function wgetCommand(contextMsg) {
-	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == "$wget") {
+	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == ENV_VAR_PREFIX + "wget") {
 		contextMsg.channel.send("Error: link not specified.");
 	}
 	else {
@@ -1045,7 +1048,7 @@ function rmdirCommand(contextMsg, variableList) {
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	if (pathCorrected == "$rmdir") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "rmdir") { return; }
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -1090,7 +1093,7 @@ function rmCommand(contextMsg, variableList) {
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	if (pathCorrected == "$rm") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "rm") { return; }
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -1231,7 +1234,7 @@ function touchCommand(contextMsg, variableList) {
 
 	let localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	if (pathCorrected == "$touch") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "touch") { return; }
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -1355,7 +1358,7 @@ function echoCommand(contextMsg, variableList) {
 
 	console.log(localVarList)
 
-	if (pathCorrected == "$echo") { return; }
+	if (pathCorrected == ENV_VAR_PREFIX + "echo") { return; }
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
@@ -1397,90 +1400,90 @@ function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
 		variableList = {}
 
-	if (messageObject.content.startsWith("$"))
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX))
 		variableList["$RANDOM"] = getRandomInt(32768);
 
-	if (messageObject.content.startsWith("$apt install")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt remove")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt remove")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt update")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt update")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt list-all")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt list-all")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt help")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt help")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt change-branch")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt change-branch")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$apt what-branch")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt what-branch")) {
 		aptCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$ls")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ls")) {
 		lsCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$tree")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "tree")) {
 		treeCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$pwd")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "pwd")) {
 		pwdCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$cd")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cd")) {
 		cdCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$mkdir")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mkdir")) {
 		mkdirCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$cat")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cat")) {
 		catCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$wget")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "wget")) {
 		wgetCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$cp")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cp")) {
 		cpCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$rmdir")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rmdir")) {
 		rmdirCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$rm")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rm")) {
 		rmCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$mv")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mv")) {
 		mvCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$touch")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "touch")) {
 		touchCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$js")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "js")) {
 		jsCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$cmdlist")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cmdlist")) {
 		// format = 'name' - 'description'
 		let commandList = "";
 		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
@@ -1490,7 +1493,7 @@ function shellFunctionProcessor(messageObject, variableList) {
 		messageObject.channel.send(commandList);
 		return;
 	}
-	if (messageObject.content.startsWith("$cmdinfo")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cmdinfo")) {
 		for (let i = 0; i < Object.keys(client.cmdList).length; i++) {
 			if (Object.keys(client.cmdList)[i] == messageObject.content.split(" ")[1]) {
 				messageObject.channel.send("`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n");
@@ -1498,28 +1501,28 @@ function shellFunctionProcessor(messageObject, variableList) {
 		}
 		return;
 	}
-	if (messageObject.content.startsWith("$upgrade-os")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "upgrade-os")) {
 		UpgradeOS();
 		return;
 	}
-	if (messageObject.content.startsWith("$reboot")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "reboot")) {
 		RebootOS(messageObject);
 		return;
 	}
-	if (messageObject.content.startsWith("$echo")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "echo")) {
 		echoCommand(messageObject, variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$secho")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "secho")) {
 		echoCommand(createConsoleMessageObject(messageObject.content), variableList);
 		return;
 	}
-	if (messageObject.content.startsWith("$export")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "export")) {
 		exportCommand(messageObject);
 		return;
 	}
 	// inline sh
-	if (messageObject.content.startsWith("$ish")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ish")) {
 		// console.log(messageObject.content);
 		if (messageObject.content.split("\n")[1].startsWith("```") && messageObject.content.split("\n")[1].endsWith("```")) {
 			//console.log(messageObject.content.split("\n")[2]);
@@ -1550,18 +1553,18 @@ function shellFunctionProcessor(messageObject, variableList) {
 			fs.rmSync(tempFileName);
 		}
 	}
-	if (messageObject.content.startsWith("$whoami")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "whoami")) {
 		whoamiCommand(messageObject);
 		return;
 	}
-	if (messageObject.content.startsWith("$sh")) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "sh")) {
 		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
 			messageObject.channel.send("Error: filename required"); return;
 		}
 
 		let pathCorrected = messageObject.content.split(" ")[1];
 
-		if (pathCorrected == "$sh") { return; }
+		if (pathCorrected == ENV_VAR_PREFIX + "sh") { return; }
 
 		// console.log(pathCorrected);
 
@@ -1652,7 +1655,7 @@ function executeShFile(filename, msg, customVarList) {
 				localVars["$" + element.split("=")[0]] = localVars[element.split("=")[1]];
 				continue;
 			}
-			if (!element.startsWith("$export"))
+			if (!element.startsWith(ENV_VAR_PREFIX + "export"))
 				localVars["$" + element.split("=")[0]] = element.split("=")[1];
 			// continue;s
 		}
