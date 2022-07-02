@@ -127,6 +127,7 @@ client.cmdList = {
 	"upgrade-os": `upgrade everything and re-download the os`,
 	"reboot": `reboots os`,
 	"sh": `runs a file executing every line with command from this list.`,
+	"ish": `runs provided command list executing every line with command from this list.`,
 	"echo": 'simple echo command. supports variables',
 	"secho": 'silent echo, prints to console',
 	"export": 'makes a variable global',
