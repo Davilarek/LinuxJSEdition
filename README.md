@@ -56,6 +56,7 @@ Please report any bugs and security holes, when you find any.
 - Try out $apt list-all!
 - If youre looking for an text editor - download text-edit package!
 - You can find configuration file in /root/.config.
+- You can change prefix using prefix.txt in bot directory
 
 ## License
 
