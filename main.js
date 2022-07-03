@@ -106,6 +106,8 @@ getVersion().then(v => {
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag)
 	client.user.setActivity("Linux JS Edition testing...");
+	process.title = "Linux JS Edition";
+	// process.stdout.write(String.fromCharCode(27) + "]0;" + "LinuxJS" + String.fromCharCode(7));
 	process.chdir('VirtualDrive');
 
 	ENV_VAR_STARTUP_NICKNAME = client.user.username;
@@ -1334,6 +1336,9 @@ function getAllFiles(dirPath, arrayOfFiles) {
  * * Close the main process and kill all modules
  */
 function closeMain() {
+	if (client.safeClient["bootChannel"] != null) {
+		client.safeClient["bootChannel"].guild.me.setNickname(client.user.username);
+	}
 	client.removeAllListeners("message");
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
 		try {
@@ -1342,7 +1347,9 @@ function closeMain() {
 			console.log("skip" + f);
 		}
 	});
-	client.destroy();
+	setTimeout(() => {
+		client.destroy();
+	}, 500);
 }
 
 /**
@@ -1894,5 +1901,35 @@ for (let index = 0; index < getFileStructure().length; index++) {
 if (fileStructureChecksPassed != getFileStructure().length) {
 	console.log("File missing, cannot continue."); process.exit(1);
 }
+
+/*
+	no need to use this, works on my machine :)
+*/
+// if (process.platform === "win32") {
+// 	var rl = require("readline").createInterface({
+// 		input: process.stdin,
+// 		output: process.stdout
+// 	});
+
+// 	rl.on("SIGINT", function () {
+// 		process.emit("SIGINT");
+// 	});
+// }
+
+process.on("SIGINT", function () {
+	console.log("SIGINT received. Exiting...");
+	closeMain();
+	setTimeout(() => {
+		process.exit();
+	}, 1000);
+});
+
+process.on('SIGTERM', function () {
+	console.log("SIGTERM received. Exiting...");
+	closeMain();
+	setTimeout(() => {
+		process.exit();
+	}, 1000);
+});
 
 client.login(ENV_VAR_BOT_TOKEN);
