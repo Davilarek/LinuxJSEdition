@@ -694,7 +694,11 @@ function treeCommand(contextMsg, variableList) {
 		}
 		else {
 			// console.log((new Array(level + 1)).join(" "))
-			var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0);
+
+			// console.log(getDirectoriesInDirectories(pathCorrected));
+
+			var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + getAllDirectories(pathCorrected).length + " directories, " + getAllFiles(pathCorrected).length + ' files';
+			// var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[1].length + " directories, " + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[0].length + ' files';
 			for (let i = 0; i < str.length; i += 1800) {
 				const toSend = str.substring(i, Math.min(str.length, i + 1800));
 				contextMsg.channel.send("```\n" + toSend + "\n```");
@@ -705,6 +709,43 @@ function treeCommand(contextMsg, variableList) {
 	else {
 		contextMsg.channel.send("Error: directory doesn't exist.");
 	}
+}
+
+const getDirectories = source =>
+	fs.readdirSync(source, { withFileTypes: true })
+		.filter(dirent => dirent.isDirectory())
+		.map(dirent => dirent.name)
+
+function getDirectoriesInDirectories(source) {
+	let directories = [];
+	getDirectories(source).forEach(function (dir) {
+		directories.push(path.join(source, dir));
+		let subdirectories = getDirectoriesInDirectories(path.join(source, dir));
+		if (subdirectories.length > 0) {
+			directories.push(subdirectories);
+		}
+
+		// directories.push(getDirectoriesInDirectories(source + path.sep + dir));
+	});
+	return directories;
+}
+
+function flatten(items) {
+	const flat = [];
+
+	items.forEach(item => {
+		if (Array.isArray(item)) {
+			flat.push(...flatten(item));
+		} else {
+			flat.push(item);
+		}
+	});
+
+	return flat;
+}
+
+function getAllDirectories(source) {
+	return flatten(getDirectoriesInDirectories(source));
 }
 
 function readTree(tree, level) {
