@@ -26,4 +26,4 @@ VirtualDrive/var/log/*.*
 .vscode/*.*
 node_modules
 token.txt
-workspace.code-workspace
+*.code-workspace
