@@ -38,7 +38,7 @@ node .
 
 ##### Step 3.
 Add it to your server, go to a channel that bot has access to, type "$boot" to start the entire thing.
-Every command has prefix $.
+Every command has prefix default $ (prefix.txt).
 Use $cmdlist to show list of commands (without external commands).
 Examples:
 
