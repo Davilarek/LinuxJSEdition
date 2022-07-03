@@ -11,8 +11,8 @@ const http = require("https");
  * @param cb - A callback function that will be called when the download is complete.
  */
 function download(url, dest, cb) {
-    var file = fs.createWriteStream(dest);
-    var request = http.get(url, function (response) {
+    const file = fs.createWriteStream(dest);
+    const request = http.get(url, function (response) {
         response.pipe(file);
         file.on('finish', function () {
             file.close(cb);
@@ -25,7 +25,7 @@ function download(url, dest, cb) {
 }
 
 /**
- * *This function deletes the cached version of the module and then returns the module. 
+ * *This function deletes the cached version of the module and then returns the module.
  * This is useful if you want to force a refresh of the module.*
  * @param {string} module - The name of the module to be required.
  */
@@ -36,10 +36,10 @@ function requireUncached(module) {
 
 /**
  * A function that downloads the latest version of the main.js file from the GitHub repository
- * and then runs it. 
+ * and then runs it.
  */
 module.exports.Upgrade = function () {
-    //mainFile.CloseAndUpgrade();
+    //  mainFile.CloseAndUpgrade();
     delete require.cache[require.resolve("./main.js")];
 
     download("https://raw.githubusercontent.com/Davilarek/LinuxJSEdition/master/main.js", "./main.js", function () {

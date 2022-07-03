@@ -3,14 +3,14 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
-const executeTimestamp = performance.now()
+const executeTimestamp = performance.now();
 const Discord = require('discord.js');
 
 // sounds dangerous
-var open = Discord.TextChannel.prototype.send;
+const open = Discord.TextChannel.prototype.send;
 
 /**
- * Replaces send function of TextChannel 
+ * Replaces send function of TextChannel
  */
 function openReplacement(text) {
 	// console.log(text);
@@ -31,11 +31,11 @@ let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
-let ENV_VAR_LIST = {
+const ENV_VAR_LIST = {
 	"$HOME": "/root",
 	"~": "/root",
-	"$USER": "root"
-}
+	"$USER": "root",
+};
 
 function getRandomInt(max) {
 	return Math.floor(Math.random() * max);
@@ -43,7 +43,8 @@ function getRandomInt(max) {
 let ENV_VAR_BOT_TOKEN;
 try {
 	ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
-} catch (error) {
+}
+catch (error) {
 	console.log("No bot token found. Cannot continue.");
 	process.exit(0);
 }
@@ -52,7 +53,7 @@ const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" +
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
 const ENV_VAR_APT_LOG_LOCATION = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "var" + path.sep + "log" + path.sep + "apt";
 const ENV_VAR_NULL_CHANNEL = {
-	/** 
+	/**
 	 * @param {string} content
 	*/
 	send: function (content) {
@@ -64,12 +65,12 @@ const ENV_VAR_NULL_CHANNEL = {
 				// v = null;
 				// console.log(v);
 				// v();
-			}
-		}
-	}
+			},
+		};
+	},
 };
 const ENV_VAR_CONSOLE_CHANNEL = {
-	/** 
+	/**
 	 * @param {string} content
 	*/
 	send: function (content) {
@@ -82,10 +83,10 @@ const ENV_VAR_CONSOLE_CHANNEL = {
 				// v = null;
 				// console.log(v);
 				// v();
-			}
-		}
-	}
-}
+			},
+		};
+	},
+};
 // redirects guild property to empty one
 const ENV_VAR_NULL_GUILD = {
 	me: {
@@ -93,9 +94,9 @@ const ENV_VAR_NULL_GUILD = {
 			if (client.safeClient["bootChannel"] != null) {
 				client.safeClient["bootChannel"].guild.me.setNickname(text);
 			}
-		}
-	}
-}
+		},
+	},
+};
 const ENV_VAR_PREFIX = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "prefix.txt", 'utf8');
 let ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
@@ -104,7 +105,7 @@ getVersion().then(v => {
 });
 
 client.on('ready', () => {
-	console.log("Connected as " + client.user.tag)
+	console.log("Connected as " + client.user.tag);
 	client.user.setActivity("Linux JS Edition testing...");
 	process.title = "Linux JS Edition";
 	// process.stdout.write(String.fromCharCode(27) + "]0;" + "LinuxJS" + String.fromCharCode(7));
@@ -145,8 +146,8 @@ client.cmdList = {
 	"echo": 'simple echo command. supports variables',
 	"secho": 'silent echo, prints to console',
 	"export": 'makes a variable global',
-	"whoami": `displays current user (always root)`
-}
+	"whoami": `displays current user (always root)`,
+};
 
 client.enableStdin = true;
 
@@ -161,8 +162,8 @@ client.fakeMessageCreator = createFakeMessageObject;
 client.commandOutputHistory = [];
 
 client.coolTools = {
-	"replaceAll": replaceAll
-}
+	"replaceAll": replaceAll,
+};
 
 /* Registering an external command. */
 client.registerExternalCommand = (name, func, description) => {
@@ -175,7 +176,7 @@ client.registerExternalCommand = (name, func, description) => {
 	if (description)
 		client.safeClient.cmdList[name] = description;
 	console.log("Registered external command: " + name);
-}
+};
 
 client.safeClient = {
 	"cmdList": client.cmdList,
@@ -186,8 +187,8 @@ client.safeClient = {
 	"fakeMessageCreator": client.fakeMessageCreator,
 	// "commandOutputHistory": client.commandOutputHistory,
 	"coolTools": client.coolTools,
-	"registerExternalCommand": client.registerExternalCommand
-}
+	"registerExternalCommand": client.registerExternalCommand,
+};
 
 /**
  * @type {Discord.TextChannel} channel set on boot
@@ -202,12 +203,12 @@ client.safeClient["bootChannel"] = null;
  * @returns The latest commit count.
  */
 async function getVersion() {
-	const bent = require('bent')
-	const getHeaders = bent('https://api.github.com')
+	const bent = require('bent');
+	const getHeaders = bent('https://api.github.com');
 	// you may want to change this
-	let str = getHeaders("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
-	var a = await str;
-	let result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0]
+	const str = getHeaders("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
+	const a = await str;
+	const result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0];
 	return result;
 }
 
@@ -215,19 +216,19 @@ async function getVersion() {
  * Get all the packages from the apt-repo repository
  */
 async function getAllRepoPackages() {
-	const bent = require('bent')
-	const getJSON = bent('json')
-	var repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2]
-	//console.log(repoUrl);
-	let str = getJSON("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
-	var a = await str;
-	//console.log(a);
-	var tree = await a.tree;
-	var packages = [];
+	const bent = require('bent');
+	const getJSON = bent('json');
+	const repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2];
+	//	console.log(repoUrl);
+	const str = getJSON("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
+	const a = await str;
+	//	console.log(a);
+	const tree = await a.tree;
+	const packages = [];
 	for (let i = 0; i < tree.length; i++) {
 		if (path.extname(tree[i].path) != ".js") { continue; }
-		//console.log(tree[i].path);
-		let ready = tree[i].path.replace("-install.js", "")
+		//	console.log(tree[i].path);
+		let ready = tree[i].path.replace("-install.js", "");
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			// console.log(file);
 			if (file == "empty.txt") { return; }
@@ -237,11 +238,12 @@ async function getAllRepoPackages() {
 				return;
 			// console.log(addInstalled)
 
-			let package
+			let package;
 			try {
 				package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 				package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
-			} catch (error) {
+			}
+			catch (error) {
 				// message.channel.send("An unexpected error occurred while trying to run package: " + file);
 				console.log(error);
 			}
@@ -261,7 +263,6 @@ async function getAllRepoPackages() {
 
 function getHash() {
 	const crypto = require('crypto');
-	const fs = require('fs');
 
 	console.log(__filename);
 	const fileBuffer = fs.readFileSync(__filename);
@@ -277,10 +278,10 @@ function getHash() {
  * (Re-)register all commands.
  */
 function register() {
-	console.log("Registering commands...")
+	console.log("Registering commands...");
 	client.on("message", (message) => {
 		if (message.author.bot) return;
-		//console.log("test");
+		//	console.log("test");
 
 		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
 		if (message.content == ENV_VAR_PREFIX + "boot" && !ENV_VAR_BOOT_COMPLETE) {
@@ -290,9 +291,10 @@ function register() {
 				if (file == "empty.txt") { return; }
 				console.log("Loading " + file + "...");
 				try {
-					let package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					const package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
-				} catch (error) {
+				}
+				catch (error) {
 					message.channel.send("An unexpected error occurred while trying to run package: " + file);
 					console.log(error);
 				}
@@ -307,7 +309,7 @@ function register() {
 				executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
 			client.commandHistory.push(client.commandHistory[0]);
-			client.commandHistory[0] = ENV_VAR_PREFIX + "boot"
+			client.commandHistory[0] = ENV_VAR_PREFIX + "boot";
 			return;
 		}
 
@@ -329,7 +331,7 @@ function register() {
 		// else if ()
 		// 	shellFunctionProcessor(message);
 	});
-	console.log("Registered about " + Object.keys(client.safeClient.cmdList).length + " commands.")
+	console.log("Registered about " + Object.keys(client.safeClient.cmdList).length + " commands.");
 }
 
 /**
@@ -341,24 +343,24 @@ function aptCommand(contextMsg) {
 	/* This code is responsible for installing a package. */
 	if (contextMsg.content.split(" ")[1] == "install") {
 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		let start = performance.now();
+		const start = performance.now();
 		let updatedCount = 0;
-		let downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+		const downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		contextMsg.channel.send("Reading config...");
-		let branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
+		const branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		let githubRepoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
-		let makeURL = githubRepoUrl + branchName + "/" + downloadNameNormalize + "-install.js";
-		let downloadDir = ENV_VAR_APT_PROTECTED_DIR;
+		const githubRepoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
+		const makeURL = githubRepoUrl + branchName + "/" + downloadNameNormalize + "-install.js";
+		const downloadDir = ENV_VAR_APT_PROTECTED_DIR;
 		contextMsg.channel.send("Get " + makeURL + "...");
 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
-		var parsed = url.parse(makeURL);
+		const parsed = url.parse(makeURL);
 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-		let download = null
+		let download = null;
 		/**
 		 * @type {UpgradedPackage[]}
 		 */
-		let packagesInstalled = [];
+		const packagesInstalled = [];
 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
 		}
@@ -367,14 +369,14 @@ function aptCommand(contextMsg) {
 		}
 		download.on('end', function (output) {
 			contextMsg.channel.send("Download complete.");
-			var pFile = null
+			let pFile = null;
 			if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
-				//console.log("t1");
+				//	console.log("t1");
 			}
 			else {
 				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
-				//console.log("t2");
+				//	console.log("t2");
 			}
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
@@ -385,10 +387,10 @@ function aptCommand(contextMsg) {
 
 				updatedCount += 1;
 				contextMsg.channel.send("Done").then(v => {
-					var end = performance.now();
-					var time = end - start;
+					const end = performance.now();
+					const time = end - start;
 					contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-					makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled))
+					makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled));
 				});
 			});
 		});
@@ -401,14 +403,14 @@ function aptCommand(contextMsg) {
 	/* This code is responsible for removing a package from the system. */
 	if (contextMsg.content.split(" ")[1] == "remove") {
 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		let start = performance.now();
+		const start = performance.now();
 		let updatedCount = 0;
-		let removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		let removeDir = null
+		const removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+		let removeDir = null;
 		/**
 		 * @type {UpgradedPackage[]}
 		 */
-		let packagesRemoved = [];
+		const packagesRemoved = [];
 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
 			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
 		}
@@ -417,9 +419,9 @@ function aptCommand(contextMsg) {
 		}
 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
-			//delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
-			let package = requireUncached(removeDir + path.sep + removeNameNormalize + "-install.js");
-			packagesRemoved.push(new UpgradedPackage(package.Version, package.Version, removeNameNormalize, ""));
+			//	delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
+			const targetPackage = requireUncached(removeDir + path.sep + removeNameNormalize + "-install.js");
+			packagesRemoved.push(new UpgradedPackage(targetPackage.Version, targetPackage.Version, removeNameNormalize, ""));
 
 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 
@@ -428,19 +430,20 @@ function aptCommand(contextMsg) {
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				if (file == "empty.txt") { return; }
 				try {
-					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 
-				} catch (error) {
+				}
+				catch (error) {
 					contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
 				}
 			});
 			updatedCount += 1;
 			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
-				var end = performance.now();
-				var time = end - start;
+				const end = performance.now();
+				const time = end - start;
 				contextMsg.channel.send(updatedCount + " package(s) were removed in " + parseInt(time).toFixed() + "ms.");
-				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("remove", start, end, packagesRemoved))
+				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("remove", start, end, packagesRemoved));
 			});
 		}
 		else {
@@ -454,23 +457,23 @@ function aptCommand(contextMsg) {
 		let finished = false;
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
 		let updatedCount = 0;
-		let branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
+		const branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		let githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
-		let start = performance.now();
+		const githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+		const start = performance.now();
 		/**
 		 * @type {UpgradedPackage[]}
 		 */
-		let updatesInstalled = [];
+		const updatesInstalled = [];
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-			let makeURL = githubRepoUrl + branchName + "/" + file;
-			let download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+			const makeURL = githubRepoUrl + branchName + "/" + file;
+			const download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
 			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
 			download.on('end', function (output) {
-				let package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
-				let packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+				const package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+				const packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 				if (package.Version != packageOld.Version) {
 					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
 					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
@@ -491,16 +494,17 @@ function aptCommand(contextMsg) {
 			register();
 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 				try {
-					let package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+					const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-				} catch (error) {
-					//contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+				}
+				catch (error) {
+					//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
 				}
 			});
 		}
 		contextMsg.channel.send("Done").then(v => {
-			var end = performance.now();
-			var time = end - start;
+			const end = performance.now();
+			const time = end - start;
 			contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
 			makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
 		});
@@ -509,12 +513,12 @@ function aptCommand(contextMsg) {
 
 	/* Send message with all packages in the repository. */
 	if (contextMsg.content.split(" ")[1] == "list-all") {
-		contextMsg.channel.send("Collecting data from repository...").then(v => {
+		contextMsg.channel.send("Collecting data from repository...").then(() => {
 			getAllRepoPackages().then(v => {
 				contextMsg.channel.send(v.join("\n"));
 				// contextMsg.channel.send("Done.");
 			});
-		})
+		});
 	}
 
 
@@ -526,8 +530,8 @@ function aptCommand(contextMsg) {
 		// console.log(contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, ""))
 		contextMsg.channel.send("Read `/root/.config`...");
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
-		let changedBranch = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString();
-		let c2 = changedBranch.split("\n")[2].split('=')[0] + "=" + contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "")
+		const changedBranch = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString();
+		const c2 = changedBranch.split("\n")[2].split('=')[0] + "=" + contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
 		contextMsg.channel.send("Replace lines...");
 		// c2.split('=')[1] = ;
 		// console.log(changedBranch.split("\n"))
@@ -555,50 +559,50 @@ function aptCommand(contextMsg) {
 	}
 }
 /**
- * 
- * @param {*} action 
- * @param {*} starttime 
- * @param {*} endtime 
- * @param {UpgradedPackage[]} packagesAffected 
- * @returns 
+ *
+ * @param {*} action
+ * @param {*} starttime
+ * @param {*} endtime
+ * @param {UpgradedPackage[]} packagesAffected
+ * @returns
  */
 function aptLog(action, starttime, endtime, packagesAffected) {
-	let final = []
-	var d = new Date(performance.timeOrigin + starttime);
-	var d2 = new Date(performance.timeOrigin + endtime);
+	const final = [];
+	const d = new Date(performance.timeOrigin + starttime);
+	const d2 = new Date(performance.timeOrigin + endtime);
 	final[0] = "\nStart-Date: " + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "  " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
 	final[1] = "Commandline: " + "apt " + action;
 
 	switch (action) {
 		case "update":
 			{
-				let upgradeText = [];
+				const upgradeText = [];
 				for (let i = 0; i < packagesAffected.length; i++) {
 					const element = packagesAffected[i];
-					upgradeText.push(element.name + "(" + element.oldVersion + ", " + element.newVersion + ")")
+					upgradeText.push(element.name + "(" + element.oldVersion + ", " + element.newVersion + ")");
 				}
-				final[2] = "Upgrade: " + upgradeText.join(", ")
+				final[2] = "Upgrade: " + upgradeText.join(", ");
 			}
 			break;
 
 		case "install":
 			{
-				let installText = [];
+				const installText = [];
 				for (let i = 0; i < packagesAffected.length; i++) {
 					const element = packagesAffected[i];
-					installText.push(element.name + "(" + element.newVersion + ")")
+					installText.push(element.name + "(" + element.newVersion + ")");
 				}
-				final[2] = "Install: " + installText.join(", ")
+				final[2] = "Install: " + installText.join(", ");
 			}
 			break;
 		case "remove":
 			{
-				let removeText = [];
+				const removeText = [];
 				for (let i = 0; i < packagesAffected.length; i++) {
 					const element = packagesAffected[i];
-					removeText.push(element.name + "(" + element.newVersion + ")")
+					removeText.push(element.name + "(" + element.newVersion + ")");
 				}
-				final[2] = "Remove: " + removeText.join(", ")
+				final[2] = "Remove: " + removeText.join(", ");
 			}
 			break;
 		default:
@@ -615,7 +619,7 @@ function makeLogFile(filename, data) {
 }
 
 /**
- * *This function deletes the cached version of the module and then returns the module. 
+ * *This function deletes the cached version of the module and then returns the module.
  * This is useful if you want to force a refresh of the module.*
  * @param {string} module - The name of the module to be required.
  */
@@ -629,16 +633,17 @@ function requireUncached(module) {
  * @param contextMsg - The message that triggered the command.
  */
 function lsCommand(contextMsg, variableList) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == ENV_VAR_PREFIX + "ls") { pathCorrected = "." }
+	if (pathCorrected == ENV_VAR_PREFIX + "ls")
+		pathCorrected = ".";
 
 	// console.log(pathCorrected);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -669,16 +674,17 @@ function lsCommand(contextMsg, variableList) {
 }
 
 function treeCommand(contextMsg, variableList) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == ENV_VAR_PREFIX + "tree") { pathCorrected = process.cwd() }
+	if (pathCorrected == ENV_VAR_PREFIX + "tree")
+		pathCorrected = process.cwd();
 
 	// console.log(pathCorrected);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -697,7 +703,7 @@ function treeCommand(contextMsg, variableList) {
 
 			// console.log(getDirectoriesInDirectories(pathCorrected));
 
-			var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + getAllDirectories(pathCorrected).length + " directories, " + getAllFiles(pathCorrected).length + ' files';
+			const str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + getAllDirectories(pathCorrected).length + " directories, " + getAllFiles(pathCorrected).length + ' files';
 			// var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[1].length + " directories, " + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[0].length + ' files';
 			for (let i = 0; i < str.length; i += 1800) {
 				const toSend = str.substring(i, Math.min(str.length, i + 1800));
@@ -714,13 +720,13 @@ function treeCommand(contextMsg, variableList) {
 const getDirectories = source =>
 	fs.readdirSync(source, { withFileTypes: true })
 		.filter(dirent => dirent.isDirectory())
-		.map(dirent => dirent.name)
+		.map(dirent => dirent.name);
 
 function getDirectoriesInDirectories(source) {
-	let directories = [];
+	const directories = [];
 	getDirectories(source).forEach(function (dir) {
 		directories.push(path.join(source, dir));
-		let subdirectories = getDirectoriesInDirectories(path.join(source, dir));
+		const subdirectories = getDirectoriesInDirectories(path.join(source, dir));
 		if (subdirectories.length > 0) {
 			directories.push(subdirectories);
 		}
@@ -736,7 +742,8 @@ function flatten(items) {
 	items.forEach(item => {
 		if (Array.isArray(item)) {
 			flat.push(...flatten(item));
-		} else {
+		}
+		else {
 			flat.push(item);
 		}
 	});
@@ -754,9 +761,9 @@ function readTree(tree, level) {
 	// console.log(tree.path);
 	// console.log(tree.path.split("/").length)
 	if (tree.path.split("/").length == 1 || tree.path.split("/")[tree.path.split("/").length - 1] == "")
-		final += (new Array(level)).join("─") + "/:" + "\n"
+		final += (new Array(level)).join("─") + "/:" + "\n";
 	else if (tree.path)
-		final += (new Array(level + 1)).join(" ") + "└─" + (new Array(level + 1)).join("─") + tree.path.split("/")[tree.path.split("/").length - 1] + "\n"
+		final += (new Array(level + 1)).join(" ") + "└─" + (new Array(level + 1)).join("─") + tree.path.split("/")[tree.path.split("/").length - 1] + "\n";
 	if (tree.children)
 		for (let index = 0; index < tree.children.length; index++) {
 			const element = tree.children[index];
@@ -779,13 +786,13 @@ function readTree(tree, level) {
  * @param contextMsg - The message that triggered the command.
  */
 function pwdCommand(contextMsg) {
-	var pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
+	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 	if (pathWithoutDrive == "") {
 		pathWithoutDrive = "/";
 	}
 	// console.log(pathWithoutDrive)
-	contextMsg.channel.send(pathWithoutDrive)
+	contextMsg.channel.send(pathWithoutDrive);
 }
 
 /**
@@ -811,37 +818,37 @@ function cdCommand(contextMsg, variableList) {
 
 	if (pathCorrected == ENV_VAR_PREFIX + "cd") { return; }
 
-	//console.log("test")
+	//	console.log("test")
 
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
 
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
-		//console.log(i);
-		//console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
-		//console.log(Object.keys(ENV_VAR_LIST)[i]);
+		//	console.log(i);
+		//	console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+		//	console.log(Object.keys(ENV_VAR_LIST)[i]);
 
 		// it doesn't look good
 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
 	}
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
 	if (pathCorrected.startsWith("/")) {
-		//if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("/")) {
+		//	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("/")) {
 		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
 	}
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
 	if (fs.existsSync(pathCorrected)) {
 		if (path.resolve(pathCorrected).includes("VirtualDrive") && !path.resolve(pathCorrected).includes(ENV_VAR_APT_PROTECTED_DIR)) {
 			const stat = fs.lstatSync(pathCorrected);
 			if (stat.isFile() != true) {
 				process.chdir(pathCorrected);
-				let pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList)
+				const pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
 				// console.log(pwd.length);
 				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
 				// console.log(pwd.split("/")[pwd.split("/").length - 1])
@@ -861,7 +868,7 @@ function cdCommand(contextMsg, variableList) {
 	else {
 		contextMsg.channel.send("Error: directory doesn't exist.");
 	}
-	//}
+	//	}
 }
 
 function escapeRegExp(string) {
@@ -886,7 +893,7 @@ function replaceAll(str, find, replace) {
 function mkdirCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == ENV_VAR_PREFIX + "mkdir") { return; }
 
@@ -936,8 +943,9 @@ function mkdirCommand(contextMsg, variableList) {
 						try {
 							fs.mkdirSync(pathCorrected, { recursive: true });
 							contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
-						} catch (error) {
-							console.log(error)
+						}
+						catch (error) {
+							console.log(error);
 							contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
 						}
 					}
@@ -952,7 +960,8 @@ function mkdirCommand(contextMsg, variableList) {
 				try {
 					fs.mkdirSync(pathCorrected);
 					contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
-				} catch (error) {
+				}
+				catch (error) {
 					contextMsg.channel.send("Unexpected error occurred while creating `" + path.basename(pathCorrected) + "`.");
 				}
 			}
@@ -971,7 +980,7 @@ function mkdirCommand(contextMsg, variableList) {
 function catCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == ENV_VAR_PREFIX + "cat") { return; }
 
@@ -1004,7 +1013,7 @@ function catCommand(contextMsg, variableList) {
 						output += chunk.toString('utf8');
 					});
 					readStream.on('end', function () {
-						var str = output;
+						const str = output;
 						for (let i = 0; i < str.length; i += 2000) {
 							const toSend = str.substring(i, Math.min(str.length, i + 2000));
 							contextMsg.channel.send("```\n" + toSend + "\n```");
@@ -1033,10 +1042,10 @@ function wgetCommand(contextMsg) {
 		contextMsg.channel.send("Error: link not specified.");
 	}
 	else {
-		var parsed = url.parse(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
+		const parsed = url.parse(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1));
 		if (!fs.existsSync(path.basename(parsed.pathname))) {
 			contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-			let download = wget.download(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), path.basename(parsed.pathname));
+			const download = wget.download(contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1), path.basename(parsed.pathname));
 			download.on('end', function (output) {
 				contextMsg.channel.send("Download complete.");
 			});
@@ -1055,7 +1064,7 @@ function cpCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == undefined) { return; }
 	if (pathCorrected2 == undefined) { return; }
@@ -1072,7 +1081,7 @@ function cpCommand(contextMsg, variableList) {
 		pathCorrected2 = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
 	}
 
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
 	if (!path.resolve(pathCorrected).includes("VirtualDrive") || !path.resolve(pathCorrected2).includes("VirtualDrive")) {
 		contextMsg.channel.send("Error: cannot access this path.");
@@ -1083,7 +1092,8 @@ function cpCommand(contextMsg, variableList) {
 				try {
 					fs.copyFileSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
-				} catch (error) {
+				}
+				catch (error) {
 					contextMsg.channel.send("Unexpected error occurred while copying `" + path.basename(pathCorrected) + "`.");
 				}
 			}
@@ -1104,7 +1114,7 @@ function cpCommand(contextMsg, variableList) {
 function rmdirCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == ENV_VAR_PREFIX + "rmdir") { return; }
 
@@ -1149,7 +1159,7 @@ function rmdirCommand(contextMsg, variableList) {
 function rmCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == ENV_VAR_PREFIX + "rm") { return; }
 
@@ -1241,7 +1251,7 @@ function mvCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.split(" ")[1];
 	let pathCorrected2 = contextMsg.content.split(" ")[2];
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == undefined) { return; }
 	if (pathCorrected2 == undefined) { return; }
@@ -1258,7 +1268,7 @@ function mvCommand(contextMsg, variableList) {
 		pathCorrected2 = pathCorrected2.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
 	}
 
-	//console.log(pathCorrected);
+	//	console.log(pathCorrected);
 
 	if (!path.resolve(pathCorrected).includes("VirtualDrive") || !path.resolve(pathCorrected2).includes("VirtualDrive") || pathCorrected.includes("dir.cfg") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected)))) || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected2))))) {
 		contextMsg.channel.send("Error: cannot access this path.");
@@ -1269,7 +1279,8 @@ function mvCommand(contextMsg, variableList) {
 				try {
 					fs.renameSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
-				} catch (error) {
+				}
+				catch (error) {
 					contextMsg.channel.send("Unexpected error occurred while moving `" + path.basename(pathCorrected) + "`.");
 				}
 			}
@@ -1290,7 +1301,7 @@ function mvCommand(contextMsg, variableList) {
 function touchCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 	if (pathCorrected == ENV_VAR_PREFIX + "touch") { return; }
 
@@ -1324,8 +1335,8 @@ function touchCommand(contextMsg, variableList) {
  */
 function jsCommand(contextMsg) {
 	contextMsg.channel.send("Please note that this command is not supported and I do not take responsibility for any damage caused by using this command.");
-	let filenameBase = contextMsg.content.split(" ")[1];
-	let pFile = ENV_VAR_APT_PROTECTED_DIR + path.sep + filenameBase;
+	const filenameBase = contextMsg.content.split(" ")[1];
+	const pFile = ENV_VAR_APT_PROTECTED_DIR + path.sep + filenameBase;
 
 	if (!fs.existsSync(pFile) || !fs.statSync(pFile).isFile()) { return; }
 	contextMsg.channel.send("Setting up \"" + filenameBase + "\"...");
@@ -1334,7 +1345,8 @@ function jsCommand(contextMsg) {
 		contextMsg.channel.send("Executing \"" + filenameBase + "\"...");
 		mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 		contextMsg.channel.send("Done");
-	} catch (error) {
+	}
+	catch (error) {
 		contextMsg.channel.send("Cannot execute \"" + filenameBase + "\".");
 	}
 }
@@ -1344,10 +1356,10 @@ function jsCommand(contextMsg) {
  * @param moduleName - The name of the module to delete.
  */
 function deleteModule(moduleName) {
-	var solvedName = require.resolve(moduleName), nodeModule = require.cache[solvedName];
+	const solvedName = require.resolve(moduleName), nodeModule = require.cache[solvedName];
 	if (nodeModule) {
-		for (var i = 0; i < nodeModule.children.length; i++) {
-			var child = nodeModule.children[i];
+		for (let i = 0; i < nodeModule.children.length; i++) {
+			const child = nodeModule.children[i];
 			deleteModule(child.filename);
 		}
 		delete require.cache[solvedName];
@@ -1361,12 +1373,13 @@ function deleteModule(moduleName) {
  * @returns An array of all the files in the directory.
  */
 function getAllFiles(dirPath, arrayOfFiles) {
-	let files = fs.readdirSync(dirPath);
+	const files = fs.readdirSync(dirPath);
 	arrayOfFiles = arrayOfFiles || [];
 	files.forEach(function (file) {
 		if (fs.statSync(dirPath + path.sep + file).isDirectory()) {
 			arrayOfFiles = getAllFiles(dirPath + path.sep + file, arrayOfFiles);
-		} else {
+		}
+		else {
 			arrayOfFiles.push(path.join(dirPath, path.sep, file));
 		}
 	});
@@ -1384,7 +1397,8 @@ function closeMain() {
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
 		try {
 			deleteModule(f);
-		} catch (error) {
+		}
+		catch (error) {
 			console.log("skip" + f);
 		}
 	});
@@ -1417,9 +1431,9 @@ function RebootOS(msg) {
 function echoCommand(contextMsg, variableList) {
 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	let localVarList = { ...ENV_VAR_LIST, ...variableList };
+	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	console.log(localVarList)
+	// console.log(localVarList);
 
 	if (pathCorrected == ENV_VAR_PREFIX + "echo") { return; }
 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
@@ -1430,10 +1444,10 @@ function echoCommand(contextMsg, variableList) {
 }
 
 function readCommand(contextMsg, variableList) {
-	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
-	let filter = m => m.author.id === contextMsg.author.id;
+	const pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+	const filter = m => m.author.id === contextMsg.author.id;
 	contextMsg.channel.awaitMessages(filter, {
-		max: 1
+		max: 1,
 	})
 		.then(message => {
 			variableList[pathCorrected] = message.content;
@@ -1446,22 +1460,20 @@ function readCommand(contextMsg, variableList) {
  * @returns A message object with the content of the text and the channel of the null channel.
  */
 function createFakeMessageObject(text) {
-	let messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL, "guild": ENV_VAR_NULL_GUILD }
+	const messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL, "guild": ENV_VAR_NULL_GUILD };
 	return messageObject;
 }
 
 function createConsoleMessageObject(text) {
-	let messageObject = { "content": text, "channel": ENV_VAR_CONSOLE_CHANNEL, "guild": ENV_VAR_NULL_GUILD }
+	const messageObject = { "content": text, "channel": ENV_VAR_CONSOLE_CHANNEL, "guild": ENV_VAR_NULL_GUILD };
 	return messageObject;
 }
 
-let externalCommandList = {};
-
-
+const externalCommandList = {};
 
 function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
-		variableList = {}
+		variableList = {};
 
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX)) {
 		variableList["$RANDOM"] = getRandomInt(32768);
@@ -1590,8 +1602,8 @@ function shellFunctionProcessor(messageObject, variableList) {
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ish")) {
 		// console.log(messageObject.content);
 		if (messageObject.content.split("\n")[1].startsWith("```") && messageObject.content.split("\n")[1].endsWith("```")) {
-			//console.log(messageObject.content.split("\n")[2]);
-			let lines = []
+			//	console.log(messageObject.content.split("\n")[2]);
+			const lines = [];
 			for (let i = 2; i < messageObject.content.split("\n").length; i++) {
 				if (messageObject.content.split("\n")[i].startsWith("```"))
 					break;
@@ -1605,13 +1617,11 @@ function shellFunctionProcessor(messageObject, variableList) {
 			// lines.push("$rm -rf " + tempFileName);
 			// write temp file
 
-			//create file
+			//	create file
 			fs.writeFileSync(tempFileName, lines.join("\n"));
 
 			// shellFunctionProcessor(createFakeMessageObject("$touch " + tempFileName))
 			// fs.writeFileSync(tempFileName, lines.join("\n"));
-
-
 
 			// run temp file
 			executeShFile(tempFileName, messageObject, variableList);
@@ -1633,7 +1643,7 @@ function shellFunctionProcessor(messageObject, variableList) {
 
 		// console.log(pathCorrected);
 
-		let localVarList = { ...ENV_VAR_LIST, ...variableList };
+		const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
 		for (let i = 0; i < Object.keys(localVarList).length; i++) {
 			pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
@@ -1680,10 +1690,10 @@ module.exports.CloseAndUpgrade = function () {
 };
 
 function executeShFile(filename, msg, customVarList) {
-	let fileContent = fs.readFileSync(filename, 'utf-8')
-	let lines = fileContent.split("\n");
+	const fileContent = fs.readFileSync(filename, 'utf-8');
+	const lines = fileContent.split("\n");
 
-	let localVars = {}
+	let localVars = {};
 	if (customVarList)
 		localVars = customVarList;
 
@@ -1705,7 +1715,7 @@ function executeShFile(filename, msg, customVarList) {
 	for (let currentLineIndex = 0; currentLineIndex < lines.length; currentLineIndex++) {
 		const element = lines[currentLineIndex];
 
-		console.log("Executing " + filename + ". Current line: " + currentLineIndex)
+		console.log("Executing " + filename + ". Current line: " + currentLineIndex);
 
 		if (element.split("=")[1] && !element.startsWith("if [[")) {
 			// console.log(element.split("=")[1])
@@ -1778,7 +1788,7 @@ function executeShFile(filename, msg, customVarList) {
 		// 		if (ifs[ifIndx].lines.includes(currentLineIndex)) {
 		// 			console.log("test")
 		if (msg) {
-			let msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+			const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
 			shellFunctionProcessor(msgMod, localVars);
 		}
 		else
@@ -1812,7 +1822,7 @@ function executeShFile(filename, msg, customVarList) {
 		// console.log(ifIndx)
 		// console.log(ifs);
 
-		//shellFunctionProcessor()
+		// shellFunctionProcessor()
 	}
 }
 
@@ -1841,13 +1851,13 @@ function whoamiCommand(contextMsg) {
 	contextMsg.channel.send(ENV_VAR_LIST["$USER"]);
 }
 
-let mathChar = [
+const mathChar = [
 	"+",
 	"-",
 	"/",
 	"*",
-	"%"
-]
+	"%",
+];
 
 function parseMath(input, variableList) {
 	// console.log(input);
@@ -1884,8 +1894,8 @@ function parseMath(input, variableList) {
 
 // tree command
 class TreeNode {
-	constructor(path) {
-		this.path = path;
+	constructor(mainPath) {
+		this.path = mainPath;
 		this.children = [];
 	}
 }
@@ -1901,7 +1911,7 @@ function buildTree(pathToRoot) {
 		if (currentNode) {
 			const children = fs.readdirSync(currentNode.path);
 
-			for (let child of children) {
+			for (const child of children) {
 				const childPath = `${currentNode.path}/${child}`;
 				const childNode = new TreeNode(childPath);
 				currentNode.children.push(childNode);
@@ -1915,21 +1925,21 @@ function buildTree(pathToRoot) {
 	return root;
 }
 
-//apt upgrade
+// apt upgrade
 class UpgradedPackage {
-	constructor(oldVersion, newVersion, name, url) {
+	constructor(oldVersion, newVersion, name, packageUrl) {
 		this.oldVersion = oldVersion;
 		this.newVersion = newVersion;
 		this.name = name;
-		this.url = url;
+		this.url = packageUrl;
 	}
 }
 
 const getFileStructure = () => {
-	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun"]
-}
+	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun"];
+};
 
-console.log("Checking file structure...")
+console.log("Checking file structure...");
 let fileStructureChecksPassed = 0;
 for (let index = 0; index < getFileStructure().length; index++) {
 	const element = getFileStructure()[index];
