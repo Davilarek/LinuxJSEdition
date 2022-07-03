@@ -9,14 +9,19 @@ const Discord = require('discord.js');
 // sounds dangerous
 var open = Discord.TextChannel.prototype.send;
 
+/**
+ * Replaces send function of TextChannel 
+ */
 function openReplacement(text) {
 	// console.log(text);
+	client.commandOutputHistory.push(client.commandOutputHistory[0]);
 	client.commandOutputHistory[0] = text;
 	return open.apply(this, arguments);
 }
 
 Discord.TextChannel.prototype.send = openReplacement;
 
+// main client + tools
 const client = new Discord.Client();
 const fs = require('fs');
 const path = require('path');
@@ -51,6 +56,7 @@ const ENV_VAR_NULL_CHANNEL = {
 	 * @param {string} content
 	*/
 	send: function (content) {
+		client.commandOutputHistory.push(client.commandOutputHistory[0]);
 		client.commandOutputHistory[0] = content;
 		content = null;
 		return {
@@ -67,6 +73,7 @@ const ENV_VAR_CONSOLE_CHANNEL = {
 	 * @param {string} content
 	*/
 	send: function (content) {
+		client.commandOutputHistory.push(client.commandOutputHistory[0]);
 		client.commandOutputHistory[0] = content;
 		console.log(content);
 		content = null;
@@ -79,6 +86,7 @@ const ENV_VAR_CONSOLE_CHANNEL = {
 		}
 	}
 }
+// redirects guild property to empty one
 const ENV_VAR_NULL_GUILD = {
 	me: {
 		setNickname: function (text) {
@@ -108,6 +116,9 @@ client.on('ready', () => {
 	// getHash();
 });
 
+/*
+built-in commands
+*/
 client.cmdList = {
 	"cmdlist": `displays list of available commands and description`,
 	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
@@ -145,7 +156,7 @@ client.listEnv = ENV_VAR_LIST;
 
 client.fakeMessageCreator = createFakeMessageObject;
 
-client.commandOutputHistory = {};
+client.commandOutputHistory = [];
 
 client.coolTools = {
 	"replaceAll": replaceAll
@@ -176,6 +187,9 @@ client.safeClient = {
 	"registerExternalCommand": client.registerExternalCommand
 }
 
+/**
+ * @type {Discord.TextChannel} channel set on boot
+ */
 client.safeClient["bootChannel"] = null;
 
 // very unsafe
@@ -290,15 +304,16 @@ function register() {
 			if (fs.existsSync(".bashrc"))
 				executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
-			client.commandHistory.push(ENV_VAR_PREFIX + "boot");
+			client.commandHistory.push(client.commandHistory[0]);
+			client.commandHistory[0] = ENV_VAR_PREFIX + "boot"
 			return;
 		}
 
 		// bot isn't booted, go back
 		if (!ENV_VAR_BOOT_COMPLETE) return;
 
-		if (message.content.startsWith(ENV_VAR_PREFIX))
-			client.commandHistory.push(message.content);
+		// if (message.content.startsWith(ENV_VAR_PREFIX))
+		// 	client.commandHistory.push(message.content);
 
 		// console.log(client.enableStdin)
 		if (client.safeClient["enableStdin"] == true)
@@ -1400,9 +1415,11 @@ function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
 		variableList = {}
 
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX))
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX)) {
 		variableList["$RANDOM"] = getRandomInt(32768);
-
+		client.commandHistory.push(client.commandHistory[0]);
+		client.commandHistory[0] = messageObject.content;
+	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
 		aptCommand(messageObject, variableList);
 		return;
@@ -1595,13 +1612,18 @@ function shellFunctionProcessor(messageObject, variableList) {
 	// 	return;
 	// }
 	// console.log(externalCommandList)
-	for (let externalCommandIndex = 0; externalCommandIndex < Object.keys(externalCommandList).length; externalCommandIndex++) {
-		const element = Object.keys(externalCommandList)[externalCommandIndex];
-		// console.log(element);
-		if (element == messageObject.content.split(" ")[0]) {
-			// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
-			externalCommandList[element](messageObject, variableList);
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX)) {
+		for (let externalCommandIndex = 0; externalCommandIndex < Object.keys(externalCommandList).length; externalCommandIndex++) {
+			const element = Object.keys(externalCommandList)[externalCommandIndex];
+			// console.log(element);
+			if (element == messageObject.content.split(" ")[0]) {
+				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
+				externalCommandList[element](messageObject, variableList);
+			}
 		}
+		// console.log(client.commandOutputHistory);
+		// console.log(client.commandHistory);
+		return;
 	}
 }
 
