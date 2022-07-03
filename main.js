@@ -4,6 +4,23 @@
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
 const executeTimestamp = performance.now();
+const fs = require('fs');
+const path = require('path');
+
+// check if user installed modules
+if (!fs.existsSync("node_modules")) {
+	console.log("Error: you need to install all node modules first.\nUse npm i");
+	process.exit(1);
+}
+
+try {
+	require.resolve("discord.js");
+}
+catch (e) {
+	console.error("Discord module is not found even though node_modules is present.\nPlease install discord.js module.\nUse npm i");
+	process.exit(e.code);
+}
+
 const Discord = require('discord.js');
 
 // sounds dangerous
@@ -23,14 +40,12 @@ Discord.TextChannel.prototype.send = openReplacement;
 
 // main client + tools
 const client = new Discord.Client();
-const fs = require('fs');
-const path = require('path');
+
 const wget = require('wget-improved');
 const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
-const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 const ENV_VAR_LIST = {
 	"$HOME": "/root",
 	"~": "/root",
@@ -1941,6 +1956,7 @@ const getFileStructure = () => {
 
 console.log("Checking file structure...");
 let fileStructureChecksPassed = 0;
+const missingFiles = [];
 for (let index = 0; index < getFileStructure().length; index++) {
 	const element = getFileStructure()[index];
 
@@ -1948,10 +1964,19 @@ for (let index = 0; index < getFileStructure().length; index++) {
 		console.log(index + 1 + " passed out of " + getFileStructure().length);
 		fileStructureChecksPassed++;
 	}
+	else {
+		console.log(index + 1 + " failed");
+		missingFiles.push(element);
+	}
 }
 if (fileStructureChecksPassed != getFileStructure().length) {
-	console.log("File missing, cannot continue."); process.exit(1);
+	console.log("File missing, cannot continue.");
+	console.log("Missing file(s): " + missingFiles);
+	process.exit(1);
 }
+
+
+const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
 
 /*
 	no need to use this, works on my machine :)
