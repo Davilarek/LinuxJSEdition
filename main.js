@@ -1952,7 +1952,8 @@ function unameCommand(contextMsg) {
 					" --help				 	Displays this help and exit";
 				break;
 			default:
-				break;
+				return;
+				// break;
 		}
 		contextMsg.channel.send("```\n" + output + "\n```");
 		return;
