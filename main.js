@@ -589,7 +589,8 @@ function aptCommand(contextMsg) {
 		// console.log(final);
 		fs.writeFileSync(BASEDIR + "root" + path.sep + ".config", final);
 		contextMsg.channel.send("Done.");
-		shellFunctionProcessor({ "content": ENV_VAR_PREFIX + "cat /root/.config", "channel": contextMsg.channel });
+		// shellFunctionProcessor({ "content": ENV_VAR_PREFIX + "cat /root/.config", "channel": contextMsg.channel });
+		shellFunctionProcessor(createMessageObjectFromMessageObject(ENV_VAR_PREFIX + "cat /root/.config", contextMsg));
 	}
 	if (contextMsg.content.split(" ")[1] == "what-branch") {
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
@@ -1507,6 +1508,11 @@ function createConsoleMessageObject(text) {
 	return messageObject;
 }
 
+function createMessageObjectFromMessageObject(text, original) {
+	const messageObject = { "content": text, "channel": original.channel, "guild": original.guild };
+	return messageObject;
+}
+
 const externalCommandList = {};
 
 function shellFunctionProcessor(messageObject, variableList) {
@@ -1830,8 +1836,8 @@ function executeShFile(filename, msg, customVarList) {
 		// 		if (ifs[ifIndx].lines.includes(currentLineIndex)) {
 		// 			console.log("test")
 		if (msg) {
-			const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-			shellFunctionProcessor(msgMod, localVars);
+			// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+			shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
 		}
 		else
 			shellFunctionProcessor(createFakeMessageObject(element), localVars);
