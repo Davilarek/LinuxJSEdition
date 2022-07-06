@@ -492,7 +492,7 @@ function aptCommand(contextMsg) {
 				if (package.Version != packageOld.Version) {
 					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
 					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
-					contextMsg.channel.send("Done.");
+					contextMsg.channel.send("Replacing finished.");
 					updatesInstalled.push(new UpgradedPackage(packageOld.Version, package.Version, file.replace("-install.js", ""), makeURL));
 					updatedCount += 1;
 					finished = true;
@@ -504,25 +504,37 @@ function aptCommand(contextMsg) {
 				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
 			});
 		});
-		if (finished) {
-			client.removeAllListeners("message");
-			register();
-			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-				try {
-					const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-				}
-				catch (error) {
-					//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
-				}
+		setTimeout(function () {
+			if (finished) {
+				client.removeAllListeners("message");
+				register();
+				// console.log("test");
+
+				fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+					if (file == "empty.txt") { return; }
+					try {
+						const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+						package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+						// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
+						// console.log(typeof package.OnUpdate === 'function');
+						// console.log("test");
+						if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
+							package.OnUpdate(null, contextMsg.channel);
+						}
+					}
+					catch (error) {
+						//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+						console.log(error);
+					}
+				});
+			}
+			contextMsg.channel.send("Done.").then(v => {
+				const end = performance.now();
+				const time = end - start;
+				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
 			});
-		}
-		contextMsg.channel.send("Done").then(v => {
-			const end = performance.now();
-			const time = end - start;
-			contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-			makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
-		});
+		}, 1000);
 	}
 
 
