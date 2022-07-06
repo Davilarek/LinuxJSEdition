@@ -113,6 +113,16 @@ const ENV_VAR_NULL_GUILD = {
 	},
 };
 const ENV_VAR_PREFIX = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "prefix.txt", 'utf8');
+const ENV_VAR_UNAME_STRING = {
+	KERNEL_NAME: "LinuxJSEdition",
+	NODENAME: "LinuxJSEdition",
+	KERNEL_RELEASE: "0.165.0-amd64",
+	KERNEL_VERSION: "#1 SMP LinuxJSEdition 0.165.0 (2022-06-07)",
+	MACHINE: "x86_64",
+	PROCESSOR: "unknown",
+	HARDWARE_PLATFORM: "unknown",
+	PLATFORM: "LinuxJSEdition",
+};
 let ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
 getVersion().then(v => {
@@ -161,6 +171,7 @@ client.cmdList = {
 	"echo": 'simple echo command. supports variables',
 	"secho": 'silent echo, prints to console',
 	"export": 'makes a variable global',
+	"uname": 'prints certain system information. use "' + ENV_VAR_PREFIX + 'uname --help" for more help.',
 	"whoami": `displays current user (always root)`,
 };
 
@@ -1625,6 +1636,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 		exportCommand(messageObject);
 		return;
 	}
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "uname")) {
+		unameCommand(messageObject);
+		return;
+	}
 	// inline sh
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ish")) {
 		// console.log(messageObject.content);
@@ -1872,6 +1887,76 @@ function exportCommand(contextMsg, variableList) {
 	}
 	console.log("Exporting variable " + "$" + contextMsg.content.split(" ")[1].split("=")[0] + "...");
 	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
+}
+
+function unameCommand(contextMsg) {
+	if (!contextMsg.content.split(" ")[1]) {
+		contextMsg.channel.send("LinuxJSEdition");
+		return;
+	}
+	if (contextMsg.content.split(" ")[1].startsWith("-")) {
+		// contextMsg.channel.send("LinuxJSEdition");
+		const option = contextMsg.content.split(" ")[1].replace("-", "");
+		// console.log(option);
+		let output = "";
+		switch (option) {
+			case "-all":
+			case "a":
+				output = replaceAll(Object.values(ENV_VAR_UNAME_STRING).join(" "), " unknown", "");
+				break;
+			case "-kernel-name":
+			case "s":
+				output = ENV_VAR_UNAME_STRING.KERNEL_NAME;
+				break;
+			case "-nodename":
+			case "n":
+				output = ENV_VAR_UNAME_STRING.NODENAME;
+				break;
+			case "-kernel-release":
+			case "r":
+				output = ENV_VAR_UNAME_STRING.KERNEL_RELEASE;
+				break;
+			case "-kernel-version":
+			case "v":
+				output = ENV_VAR_UNAME_STRING.KERNEL_VERSION;
+				break;
+			case "-machine":
+			case "m":
+				output = ENV_VAR_UNAME_STRING.MACHINE;
+				break;
+			case "-processor":
+			case "p":
+				output = ENV_VAR_UNAME_STRING.PROCESSOR;
+				break;
+			case "-hardware-platform":
+			case "i":
+				output = ENV_VAR_UNAME_STRING.HARDWARE_PLATFORM;
+				break;
+			case "-operating-system":
+			case "o":
+				output = ENV_VAR_UNAME_STRING.PLATFORM;
+				break;
+			case "-help":
+				output = "Usage: uname [option]\n\n" +
+					"When no option is specified, the output is the same as the -s option.\n\n" +
+					"Options:\n" +
+					" -a, --all					Displays all options in this order, excluding -p and -i if unknown.\n" +
+					" -s, --kernel-name			Displays kernel name\n" +
+					" -n, --nodename 			Displays system network name\n" +
+					" -r, --kernel-release		Displays kernel release number\n" +
+					" -v, --kernel-version		Dispalys kernel version\n" +
+					" -m, --machine				Displays architecture name\n" +
+					" -p, --processor 			Displays processor type (non-portable)\n" +
+					" -i, --hardware-platform	Displays hardware platform (non-portable)\n" +
+					" -o, --operating-system 	Displays operating system name\n" +
+					" --help				 	Displays this help and exit";
+				break;
+			default:
+				break;
+		}
+		contextMsg.channel.send("```\n" + output + "\n```");
+		return;
+	}
 }
 
 function whoamiCommand(contextMsg) {
