@@ -1953,7 +1953,7 @@ function unameCommand(contextMsg) {
 				break;
 			default:
 				return;
-				// break;
+			// break;
 		}
 		contextMsg.channel.send("```\n" + output + "\n```");
 		return;
@@ -1964,7 +1964,7 @@ function whoamiCommand(contextMsg) {
 	contextMsg.channel.send(ENV_VAR_LIST["$USER"]);
 }
 
-const mathChar = [
+const mathChars = [
 	"+",
 	"-",
 	"/",
@@ -1978,8 +1978,8 @@ function parseMath(input, variableList) {
 	for (let i2 = 0; i2 < input.split("$").length; i2++) {
 		if (!input.includes("$"))
 			break;
-		for (let index = 0; index < mathChar.length; index++) {
-			const element = mathChar[index];
+		for (let index = 0; index < mathChars.length; index++) {
+			const element = mathChars[index];
 			// console.log(i)
 			// console.log(input.split("$")[i + 1].replace(/\s/g, '').split(element)[0])
 
