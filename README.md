@@ -33,9 +33,15 @@ Install the dependencies and start the application.
 ```sh
 cd LinuxJSEdition
 npm i
+```
+And then...
+```
 node .
 ```
-
+Or if you are on Windows...
+```
+quick-launch.bat
+```
 ##### Step 3.
 Add it to your server, go to a channel that bot has access to, type "$boot" to start the entire thing.
 Every command has prefix default $ (prefix.txt).
