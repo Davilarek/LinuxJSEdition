@@ -57,7 +57,7 @@ function getRandomInt(max) {
 }
 let ENV_VAR_BOT_TOKEN;
 try {
-	ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString();
+	ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString().replace("\r", "").split("\n")[0];
 }
 catch (error) {
 	console.log("No bot token found. Cannot continue.");
