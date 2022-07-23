@@ -48,7 +48,11 @@ let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_LIST = {
 	"$HOME": "/root",
-	"~": "/root",
+	"~": {
+		toString: function () {
+			return ENV_VAR_LIST["$HOME"];
+		},
+	},
 	"$USER": "root",
 };
 
@@ -2095,21 +2099,26 @@ const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "
 // 		process.emit("SIGINT");
 // 	});
 // }
+function exitOnSignal() {
+	let ctrlcPressedTimes = 0;
+	process.on("SIGINT", function () {
+		if (ctrlcPressedTimes == 0) {
+			console.log("SIGINT received. Exiting...");
+			closeMain();
+			setTimeout(() => {
+				process.exit();
+			}, 1000);
+		}
+		ctrlcPressedTimes++;
+	});
 
-process.on("SIGINT", function () {
-	console.log("SIGINT received. Exiting...");
-	closeMain();
-	setTimeout(() => {
-		process.exit();
-	}, 1000);
-});
-
-process.on('SIGTERM', function () {
-	console.log("SIGTERM received. Exiting...");
-	closeMain();
-	setTimeout(() => {
-		process.exit();
-	}, 1000);
-});
-
+	process.on('SIGTERM', function () {
+		console.log("SIGTERM received. Exiting...");
+		closeMain();
+		setTimeout(() => {
+			process.exit();
+		}, 1000);
+	});
+}
+exitOnSignal();
 client.login(ENV_VAR_BOT_TOKEN);
