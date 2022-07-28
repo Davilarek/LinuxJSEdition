@@ -214,10 +214,12 @@ client.safeClient = {
 	// "commandHistory": client.commandHistory,
 	"executeCommand": client.executeCommand,
 	"listEnv": ENV_VAR_LIST,
+	"config": ENV_VAR_CONFIG_FILE,
 	"fakeMessageCreator": client.fakeMessageCreator,
 	// "commandOutputHistory": client.commandOutputHistory,
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand,
+	"aptProtectedDir": ENV_VAR_APT_PROTECTED_DIR,
 };
 
 /**
@@ -246,6 +248,7 @@ async function getVersion() {
  * Get all the packages from the apt-repo repository
  */
 async function getAllRepoPackages() {
+	// btw did I mention I don't like async/await?
 	const bent = require('bent');
 	const getJSON = bent('json');
 	const repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2];
@@ -267,6 +270,8 @@ async function getAllRepoPackages() {
 			if (tree[i].path != file)
 				return;
 			// console.log(addInstalled)
+
+			// \/ replace with require.cache check
 
 			let package;
 			try {
@@ -1439,10 +1444,19 @@ function closeMain() {
 	client.removeAllListeners("message");
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
 		try {
-			deleteModule(f);
+			// first check if require cache contains the module
+			// then check if module exports has a OnClose function
+			if (require.cache[f]) {
+				if (require.cache[f].exports.OnClose != null) {
+					require.cache[f].exports.OnClose();
+				}
+			}
+			// deleteModule(f);
+			delete require.cache[require.resolve(f)];
 		}
 		catch (error) {
-			console.log("skip" + f);
+			console.log("skip " + f);
+			console.log(error);
 		}
 	});
 	setTimeout(() => {
@@ -1947,6 +1961,8 @@ function unameCommand(contextMsg) {
 				output = ENV_VAR_UNAME_STRING.PLATFORM;
 				break;
 			case "-help":
+				// i spent too much time on this
+				// but in the end it still looks ugly
 				output = "Usage: uname [option]\n\n" +
 					"When no option is specified, the output is the same as the -s option.\n\n" +
 					"Options:\n" +
