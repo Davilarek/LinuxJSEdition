@@ -989,6 +989,20 @@ function mkdirCommand(contextMsg, variableList) {
 					console.log(pathCorrected);
 					if (!fs.existsSync(pathCorrected)) {
 						try {
+							pathCorrected = replaceAll(pathCorrected, "\n", "_");
+							pathCorrected = replaceAll(pathCorrected, "\r", "_");
+							// weird stuff happens when you not remove new lines
+
+							// remove unicode from pathCorrected
+							// eslint-disable-next-line no-control-regex
+							pathCorrected = pathCorrected.replace(/[^\x00-\x7F]/g, "_");
+
+							// remove special characters from pathCorrected
+							pathCorrected = pathCorrected.replace(/[^a-zA-Z0-9_\-.]/g, "_");
+
+							// remove stuff that file system doesn't like
+							pathCorrected = pathCorrected.replace(/[<>:"|?*]/g, "_");
+
 							fs.mkdirSync(pathCorrected, { recursive: true });
 							contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
 						}
@@ -1006,6 +1020,20 @@ function mkdirCommand(contextMsg, variableList) {
 		else
 			if (!fs.existsSync(pathCorrected)) {
 				try {
+					pathCorrected = replaceAll(pathCorrected, "\n", "_");
+					pathCorrected = replaceAll(pathCorrected, "\r", "_");
+					// weird stuff happens when you not remove new lines
+
+					// remove unicode from pathCorrected
+					// eslint-disable-next-line no-control-regex
+					pathCorrected = pathCorrected.replace(/[^\x00-\x7F]/g, "_");
+
+					// remove special characters from pathCorrected
+					pathCorrected = pathCorrected.replace(/[^a-zA-Z0-9_\-.]/g, "_");
+
+					// remove stuff that file system doesn't like
+					pathCorrected = pathCorrected.replace(/[<>:"|?*]/g, "_");
+
 					fs.mkdirSync(pathCorrected);
 					contextMsg.channel.send("Directory `" + path.resolve(pathCorrected).replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '') + "` created successfully.");
 				}
@@ -1138,6 +1166,19 @@ function cpCommand(contextMsg, variableList) {
 		if (fs.existsSync(pathCorrected)) {
 			if (!fs.existsSync(pathCorrected2)) {
 				try {
+					pathCorrected2 = replaceAll(pathCorrected2, "\n", "_");
+					pathCorrected2 = replaceAll(pathCorrected2, "\r", "_");
+					// weird stuff happens when you not remove new lines
+
+					// remove unicode from pathCorrected
+					// eslint-disable-next-line no-control-regex
+					pathCorrected2 = pathCorrected2.replace(/[^\x00-\x7F]/g, "_");
+
+					// remove special characters from pathCorrected
+					pathCorrected2 = pathCorrected2.replace(/[^a-zA-Z0-9_\-.]/g, "_");
+
+					// remove stuff that file system doesn't like
+					pathCorrected2 = pathCorrected2.replace(/[<>:"|?*]/g, "_");
 					fs.copyFileSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
 				}
@@ -1325,6 +1366,20 @@ function mvCommand(contextMsg, variableList) {
 		if (fs.existsSync(pathCorrected)) {
 			if (!fs.existsSync(pathCorrected2)) {
 				try {
+					pathCorrected2 = replaceAll(pathCorrected2, "\n", "_");
+					pathCorrected2 = replaceAll(pathCorrected2, "\r", "_");
+					// weird stuff happens when you not remove new lines
+
+					// remove unicode from pathCorrected
+					// eslint-disable-next-line no-control-regex
+					pathCorrected2 = pathCorrected2.replace(/[^\x00-\x7F]/g, "_");
+
+					// remove special characters from pathCorrected
+					pathCorrected2 = pathCorrected2.replace(/[^a-zA-Z0-9_\-.]/g, "_");
+
+					// remove stuff that file system doesn't like
+					pathCorrected2 = pathCorrected2.replace(/[<>:"|?*]/g, "_");
+
 					fs.renameSync(pathCorrected, pathCorrected2);
 					contextMsg.channel.send("Done.");
 				}
@@ -1365,6 +1420,20 @@ function touchCommand(contextMsg, variableList) {
 		contextMsg.channel.send("Error: cannot access this path.");
 	}
 	else {
+		pathCorrected = replaceAll(pathCorrected, "\n", "_");
+		pathCorrected = replaceAll(pathCorrected, "\r", "_");
+		// weird stuff happens when you not remove new lines
+
+		// remove unicode from pathCorrected
+		// eslint-disable-next-line no-control-regex
+		pathCorrected = pathCorrected.replace(/[^\x00-\x7F]/g, "_");
+
+		// remove special characters from pathCorrected
+		pathCorrected = pathCorrected.replace(/[^a-zA-Z0-9_\-.]/g, "_");
+
+		// remove stuff that file system doesn't like
+		pathCorrected = pathCorrected.replace(/[<>:"|?*]/g, "_");
+
 		if (!fs.existsSync(pathCorrected)) {
 			fs.closeSync(fs.openSync(pathCorrected, 'w'));
 			contextMsg.channel.send("Done.");
