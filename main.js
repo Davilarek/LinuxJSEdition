@@ -59,14 +59,19 @@ const ENV_VAR_LIST = {
 function getRandomInt(max) {
 	return Math.floor(Math.random() * max);
 }
-let ENV_VAR_BOT_TOKEN;
-try {
-	ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString().replace("\r", "").split("\n")[0];
-}
-catch (error) {
+
+if (!fs.existsSync(ENV_VAR_BASE_DIR + path.sep + "token.txt")) {
 	console.log("No bot token found. Cannot continue.");
 	process.exit(0);
 }
+
+const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString().replace("\r", "").split("\n")[0];
+// try {
+// ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString().replace("\r", "").split("\n")[0];
+// }
+// catch (error) {
+
+// }
 
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
