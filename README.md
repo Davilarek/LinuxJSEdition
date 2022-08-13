@@ -50,9 +50,13 @@ Use $cmdlist to show list of commands (without external commands).
 Examples:
 
 $ls
+
 $cd bin
+
 $cat dir.cfg
+
 $apt install git
+
 
 Please note that these commands doesn't support all SH features like loops or pipe.
 ## Development
