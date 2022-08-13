@@ -1,5 +1,6 @@
-# LinuxJSEdition
+# LinuxJSEdition  [[Video link](https://www.youtube.com/watch?v=sEWgsxxMXjs)]
 ## Linux in Discord... is not a dream anymore!
+
 
 LinuxJSEdition is a Discord bot that simulates Linux environment.
 
