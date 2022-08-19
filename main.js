@@ -2189,6 +2189,8 @@ const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "
 // 		process.emit("SIGINT");
 // 	});
 // }
+
+// this works wrong after reboot
 function exitOnSignal() {
 	let ctrlcPressedTimes = 0;
 	process.on("SIGINT", function () {
