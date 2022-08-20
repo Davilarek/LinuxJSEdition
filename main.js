@@ -216,12 +216,12 @@ client.registerExternalCommand = (name, func, description) => {
 client.safeClient = {
 	"cmdList": client.cmdList,
 	"enableStdin": client.enableStdin,
-	// "commandHistory": client.commandHistory,
+	"commandHistory": client.commandHistory,
 	"executeCommand": client.executeCommand,
 	"listEnv": ENV_VAR_LIST,
 	"config": ENV_VAR_CONFIG_FILE,
 	"fakeMessageCreator": client.fakeMessageCreator,
-	// "commandOutputHistory": client.commandOutputHistory,
+	"commandOutputHistory": client.commandOutputHistory,
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand,
 	"aptProtectedDir": ENV_VAR_APT_PROTECTED_DIR,
@@ -1590,9 +1590,15 @@ function readCommand(contextMsg, variableList) {
  * @param {string} text - The text that you want to send to the bot.
  * @returns A message object with the content of the text and the channel of the null channel.
  */
-function createFakeMessageObject(text) {
+function createFakeMessageObject(text, redirectIncoming = false) {
+	// if (!redirectIncoming) {
 	const messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL, "guild": ENV_VAR_NULL_GUILD };
 	return messageObject;
+	// }
+	// else {
+	// 	const messageObject = { "content": text, "channel": ENV_VAR_NULL_CHANNEL, "guild": ENV_VAR_NULL_GUILD };
+	// 	return messageObject;
+	// }
 }
 
 function createConsoleMessageObject(text) {
@@ -1611,7 +1617,7 @@ function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
 		variableList = {};
 
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX)) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.substring(messageObject.content.indexOf(" ") + 1) in client.cmdList) {
 		variableList["$RANDOM"] = getRandomInt(32768);
 		client.commandHistory.push(client.commandHistory[0]);
 		client.commandHistory[0] = messageObject.content;
