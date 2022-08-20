@@ -1515,6 +1515,9 @@ function closeMain() {
 	if (client.safeClient["bootChannel"] != null) {
 		client.safeClient["bootChannel"].guild.me.setNickname(client.user.username);
 	}
+	process.removeListener("SIGINT", MISC_SIGINT_EVENT_FUNC);
+	process.removeListener("SIGTERM", MISC_SIGTERM_EVENT_FUNC);
+
 	client.removeAllListeners("message");
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
 		try {
@@ -2197,9 +2200,11 @@ const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "
 // }
 
 // this works wrong after reboot
+let MISC_SIGINT_EVENT_FUNC = null;
+let MISC_SIGTERM_EVENT_FUNC = null;
 function exitOnSignal() {
 	let ctrlcPressedTimes = 0;
-	process.on("SIGINT", function () {
+	MISC_SIGINT_EVENT_FUNC = function () {
 		if (ctrlcPressedTimes == 0) {
 			console.log("SIGINT received. Exiting...");
 			closeMain();
@@ -2208,15 +2213,16 @@ function exitOnSignal() {
 			}, 1000);
 		}
 		ctrlcPressedTimes++;
-	});
-
-	process.on('SIGTERM', function () {
+	};
+	process.on("SIGINT", MISC_SIGINT_EVENT_FUNC);
+	MISC_SIGTERM_EVENT_FUNC = function () {
 		console.log("SIGTERM received. Exiting...");
 		closeMain();
 		setTimeout(() => {
 			process.exit();
 		}, 1000);
-	});
+	};
+	process.on('SIGTERM', MISC_SIGTERM_EVENT_FUNC);
 }
 exitOnSignal();
 client.login(ENV_VAR_BOT_TOKEN);
