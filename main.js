@@ -348,7 +348,7 @@ function register() {
 			if (fs.existsSync(".bashrc"))
 				executeShFile(".bashrc", message);
 			ENV_VAR_BOOT_COMPLETE = true;
-			client.commandHistory.push(client.commandHistory[0]);
+			client.commandHistory.push({ ...client.commandHistory[0] });
 			client.commandHistory[0] = ENV_VAR_PREFIX + "boot";
 			return;
 		}
@@ -1619,7 +1619,7 @@ function shellFunctionProcessor(messageObject, variableList) {
 
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.substring(messageObject.content.indexOf(" ") + 1) in client.cmdList) {
 		variableList["$RANDOM"] = getRandomInt(32768);
-		client.commandHistory.push(client.commandHistory[0]);
+		client.commandHistory.push({ ...client.commandHistory[0] });
 		client.commandHistory[0] = messageObject.content;
 	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
