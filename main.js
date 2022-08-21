@@ -491,8 +491,8 @@ function aptCommand(contextMsg) {
 		}
 	}
 
-
-	/* The above code is a simple update script for the bot. It will download all packages from the repository and replace the old ones. */
+	// corrected this comment because ai lol
+	/* This code is a simple update script. It will download all packages from the repository and replace the old ones. */
 	if (contextMsg.content.split(" ")[1] == "update") {
 		let finished = false;
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
