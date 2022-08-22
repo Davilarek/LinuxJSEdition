@@ -41,7 +41,8 @@ Discord.TextChannel.prototype.send = openReplacement;
 // main client + tools
 const client = new Discord.Client();
 
-const wget = require('wget-improved');
+// const wget = require('wget-improved');
+const wget = require("./wget-fromscratch.js");
 const url = require("url");
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
