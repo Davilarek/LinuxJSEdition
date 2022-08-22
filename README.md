@@ -4,6 +4,12 @@
 
 LinuxJSEdition is a Discord bot that simulates Linux environment.
 
+## TODO
+- Fix more security holes
+- Remove wget-improved because why use this when http and https are built in
+- Port more commands
+- Port more *sh features
+
 ## Features
 
 - Basic commands, like pwd, cd, ls, cp, etc
