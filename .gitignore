@@ -27,3 +27,4 @@ VirtualDrive/var/log/*.*
 node_modules
 token.txt
 *.code-workspace
+wget-fromscratch_test.js
