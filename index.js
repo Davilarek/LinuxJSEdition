@@ -24,15 +24,15 @@ function download(url, dest, cb) {
     });
 }
 
-/**
- * *This function deletes the cached version of the module and then returns the module.
- * This is useful if you want to force a refresh of the module.*
- * @param {string} module - The name of the module to be required.
- */
-function requireUncached(module) {
-    delete require.cache[require.resolve(module)];
-    return require(module);
-}
+// /**
+//  * *This function deletes the cached version of the module and then returns the module.
+//  * This is useful if you want to force a refresh of the module.*
+//  * @param {string} module - The name of the module to be required.
+//  */
+// function requireUncached(module) {
+//     delete require.cache[require.resolve(module)];
+//     return require(module);
+// }
 
 /**
  * A function that downloads the latest version of the main.js file from the GitHub repository
@@ -43,14 +43,14 @@ module.exports.Upgrade = function () {
     delete require.cache[require.resolve("./main.js")];
 
     download("https://raw.githubusercontent.com/Davilarek/LinuxJSEdition/master/main.js", "./main.js", function () {
-        mainFile = requireUncached("./main.js");
+        mainFile = require("./main.js");
     });
 };
 
 /* A way to reload the main.js file. */
 module.exports.Reboot = function (msg) {
     delete require.cache[require.resolve("./main.js")];
-    mainFile = requireUncached("./main.js");
+    mainFile = require("./main.js");
     // console.log(msg)
     // if (msg) {
     //     let msgMod = { "content": "$boot", "channel": msg.channel };
