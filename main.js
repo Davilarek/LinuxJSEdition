@@ -142,7 +142,7 @@ getVersionRemake().then(v => {
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag);
-	getVersionRemake();
+	// getVersionRemake();
 	client.user.setActivity("Linux JS Edition testing...");
 	process.title = "Linux JS Edition";
 	// process.stdout.write(String.fromCharCode(27) + "]0;" + "LinuxJS" + String.fromCharCode(7));
