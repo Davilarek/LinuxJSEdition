@@ -44,6 +44,7 @@ const client = new Discord.Client();
 // const wget = require('wget-improved');
 const wget = require("./wget-fromscratch.js");
 const url = require("url");
+const { resolve } = require('path');
 let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
@@ -135,12 +136,13 @@ const ENV_VAR_UNAME_STRING = {
 };
 let ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
-getVersion().then(v => {
+getVersionRemake().then(v => {
 	ENV_VAR_VERSION = v;
 });
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag);
+	getVersionRemake();
 	client.user.setActivity("Linux JS Edition testing...");
 	process.title = "Linux JS Edition";
 	// process.stdout.write(String.fromCharCode(27) + "]0;" + "LinuxJS" + String.fromCharCode(7));
@@ -247,7 +249,26 @@ async function getVersion() {
 	const str = getHeaders("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
 	const a = await str;
 	const result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0];
+
 	return result;
+}
+
+/**
+ * Get commit count from Github and return it, but without using external libraries
+ * @returns The latest commit count.
+ */
+function getVersionRemake() {
+	return new Promise(function (resolve, reject) {
+		const https = require("https");
+		https.request("https://api.github.com/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", { method: 'HEAD', headers: { 'User-Agent': 'request', "accept-encoding": "gzip, deflate, br" } }, (res) => {
+			// console.log(res.statusCode);
+			// console.log(res.headers);
+			const result = res.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0];
+			resolve(result);
+		}).on('error', (err) => {
+			console.error(err);
+		}).end();
+	});
 }
 
 /**
@@ -300,6 +321,76 @@ async function getAllRepoPackages() {
 		packages.push(ready);
 	}
 	return packages;
+}
+
+/**
+ * Get all the packages from the apt-repo repository
+ */
+function getAllRepoPackagesRemake() {
+	return new Promise(function (resolve, reject) {
+		const repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2];
+		//	console.log(repoUrl);
+		// const str = getJSON("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
+
+		const https = require("https");
+		https.request("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], { method: 'GET', headers: { 'User-Agent': 'request' } }, (res) => {
+			// console.log(res.statusCode);
+			// console.log(res.headers);
+			// const result = res;
+			res.setEncoding('utf8');
+			let dataChunks = "";
+			res.on('data', function (data) {
+				dataChunks += data;
+			});
+			res.on("end", () => {
+				// console.log(dataChunks);
+				const jsonObject = JSON.parse(dataChunks);
+
+				const a = jsonObject;
+				// console.log(a);
+				const tree = a.tree;
+				const packages = [];
+				for (let i = 0; i < tree.length; i++) {
+					if (path.extname(tree[i].path) != ".js") { continue; }
+					//	console.log(tree[i].path);
+					let ready = tree[i].path.replace("-install.js", "");
+					fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+						// console.log(file);
+						if (file == "empty.txt") { return; }
+						// let addInstalled = false;
+						// console.log(file)
+						if (tree[i].path != file)
+							return;
+						// console.log(addInstalled)
+
+						// \/ replace with require.cache check
+
+						let package;
+						try {
+							package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+							package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+						}
+						catch (error) {
+							// message.channel.send("An unexpected error occurred while trying to run package: " + file);
+							console.log(error);
+						}
+						// if (addInstalled) {
+						ready += "/" + package.Version + " [installed]";
+						// }
+						// else {
+						// }
+					});
+					if (!ready.endsWith("[installed]"))
+						ready += "/unknown version";
+					// console.log(ready)
+					packages.push(ready);
+				}
+				resolve(packages);
+			});
+		}).on('error', (err) => {
+			console.error(err);
+		}).end();
+	});
 }
 
 function getHash() {
@@ -567,7 +658,8 @@ function aptCommand(contextMsg) {
 	/* Send message with all packages in the repository. */
 	if (contextMsg.content.split(" ")[1] == "list-all") {
 		contextMsg.channel.send("Collecting data from repository...").then(() => {
-			getAllRepoPackages().then(v => {
+			getAllRepoPackagesRemake().then(v => {
+				// getAllRepoPackages().then(v => {
 				contextMsg.channel.send(v.join("\n"));
 				// contextMsg.channel.send("Done.");
 			});
