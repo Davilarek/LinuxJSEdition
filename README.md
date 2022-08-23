@@ -25,7 +25,6 @@ Custom packages can be submitted to the apt repository so everyone can install t
 LinuxJSEdition uses a number of open source projects to work properly:
 
 - [discord.js] - bot
-- [bent] - get version number
 
 ## Installation
 
