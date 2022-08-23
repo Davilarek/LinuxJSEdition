@@ -1608,8 +1608,6 @@ function closeMain() {
 	if (client.safeClient["bootChannel"] != null) {
 		client.safeClient["bootChannel"].guild.me.setNickname(client.user.username);
 	}
-	process.removeListener("SIGINT", MISC_SIGINT_EVENT_FUNC);
-	process.removeListener("SIGTERM", MISC_SIGTERM_EVENT_FUNC);
 
 	client.removeAllListeners("message");
 	getAllFiles(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive').forEach(f => {
@@ -1641,6 +1639,8 @@ function closeMain() {
  */
 function UpgradeOS() {
 	process.chdir(ENV_VAR_BASE_DIR);
+	process.removeListener("SIGINT", MISC_SIGINT_EVENT_FUNC);
+	process.removeListener("SIGTERM", MISC_SIGTERM_EVENT_FUNC);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Upgrade();
 }
@@ -1651,6 +1651,8 @@ function UpgradeOS() {
  */
 function RebootOS(msg) {
 	process.chdir(ENV_VAR_BASE_DIR);
+	process.removeListener("SIGINT", MISC_SIGINT_EVENT_FUNC);
+	process.removeListener("SIGTERM", MISC_SIGTERM_EVENT_FUNC);
 	closeMain();
 	require.cache[require.resolve("./index.js")].exports.Reboot(msg);
 }
@@ -2300,6 +2302,7 @@ function exitOnSignal() {
 	MISC_SIGINT_EVENT_FUNC = function () {
 		if (ctrlcPressedTimes == 0) {
 			console.log("SIGINT received. Exiting...");
+			// console.log(ctrlcPressedTimes);
 			closeMain();
 			setTimeout(() => {
 				process.exit();
