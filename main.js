@@ -129,8 +129,8 @@ const ENV_VAR_PREFIX = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "prefix.txt
 const ENV_VAR_UNAME_STRING = {
 	KERNEL_NAME: "LinuxJSEdition",
 	NODENAME: "LinuxJSEdition",
-	KERNEL_RELEASE: "0.165.0-amd64",
-	KERNEL_VERSION: "#1 SMP LinuxJSEdition 0.165.0 (2022-06-07)",
+	KERNEL_RELEASE: "0.1." + VERSION + "-amd64",
+	KERNEL_VERSION: "#1 SMP LinuxJSEdition 0.1." + VERSION + " (2022-08-23)",
 	MACHINE: "x86_64",
 	PROCESSOR: "unknown",
 	HARDWARE_PLATFORM: "unknown",
@@ -476,7 +476,6 @@ function register() {
  * @param contextMsg - The message that triggered the command.
  */
 function aptCommand(contextMsg) {
-
 	/* This code is responsible for installing a package. */
 	if (contextMsg.content.split(" ")[1] == "install") {
 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
@@ -536,7 +535,6 @@ function aptCommand(contextMsg) {
 			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
 		});
 	}
-
 
 	/* This code is responsible for removing a package from the system. */
 	if (contextMsg.content.split(" ")[1] == "remove") {
@@ -660,7 +658,6 @@ function aptCommand(contextMsg) {
 		}, 1000);
 	}
 
-
 	/* Send message with all packages in the repository. */
 	if (contextMsg.content.split(" ")[1] == "list-all") {
 		contextMsg.channel.send("Collecting data from repository...").then(() => {
@@ -671,7 +668,6 @@ function aptCommand(contextMsg) {
 			});
 		});
 	}
-
 
 	if (contextMsg.content.split(" ")[1] == "help") {
 		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`\n`what-branch` - `show currently used branch`");
