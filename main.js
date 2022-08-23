@@ -20,7 +20,7 @@ try {
 }
 catch (e) {
 	console.error("Discord module is not found even though node_modules is present.\nPlease install discord.js module.\nUse npm i");
-	process.exit(e.code);
+	process.exit(1);
 }
 
 const Discord = require('discord.js');
@@ -66,7 +66,7 @@ function getRandomInt(max) {
 
 if (!fs.existsSync(ENV_VAR_BASE_DIR + path.sep + "token.txt")) {
 	console.log("No bot token found. Cannot continue.");
-	process.exit(0);
+	process.exit(1);
 }
 
 const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.txt").toString().replace("\r", "").split("\n")[0];
