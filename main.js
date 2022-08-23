@@ -46,8 +46,8 @@ const client = new Discord.Client();
 // const wget = require('wget-improved');
 const wget = require("./wget-fromscratch.js");
 const url = require("url");
-const { resolve } = require('path');
-let mod = null;
+// const { resolve } = require('path');
+// let mod = null;
 let ENV_VAR_BOOT_COMPLETE = false;
 const ENV_VAR_BASE_DIR = process.cwd();
 const ENV_VAR_LIST = {
@@ -518,7 +518,8 @@ function aptCommand(contextMsg) {
 			fs.readFile(pFile, function (err, data) {
 				if (err) throw err;
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
-				mod = requireUncached(pFile);
+
+				const mod = requireUncached(pFile);
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
 
@@ -1561,7 +1562,7 @@ function jsCommand(contextMsg) {
 	if (!fs.existsSync(pFile) || !fs.statSync(pFile).isFile()) { return; }
 	contextMsg.channel.send("Setting up \"" + filenameBase + "\"...");
 	try {
-		mod = require(pFile);
+		const mod = require(pFile);
 		contextMsg.channel.send("Executing \"" + filenameBase + "\"...");
 		mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 		contextMsg.channel.send("Done");
