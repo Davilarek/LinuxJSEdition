@@ -1,3 +1,4 @@
+![linuxjs_02](https://user-images.githubusercontent.com/62715937/186477476-951a905c-328b-465c-994b-5c06a3ec6465.png)
 # LinuxJSEdition  [[Video link](https://www.youtube.com/watch?v=sEWgsxxMXjs)] ![GitHub repo size](https://img.shields.io/github/repo-size/Davilarek/LinuxJSEdition)
 ## Linux in Discord... is not a dream anymore!
 
@@ -25,6 +26,7 @@ Custom packages can be submitted to the apt repository so everyone can install t
 LinuxJSEdition uses a number of open source projects to work properly:
 
 - [discord.js] - bot
+- Creator of Tux image in logo: `lewing@isc.tamu.edu and The GIMP`
 
 ## Installation
 
