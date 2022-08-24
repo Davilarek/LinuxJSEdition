@@ -11,8 +11,19 @@ class wget {
         // const file_name = path.basename(url.parse(url2).pathname);
         const file_name = output;
         const writeStream = fs.createWriteStream(file_name);
+
+        // require("https").get(url2, (res) => {
+        //     res.statusCode
+        // });
+
         const request = adapterFor(url2).get(url2, (res) => {
             res.pipe(writeStream);
+
+            if (res.statusCode == 404) {
+                // request.emit("error", 404);
+                myWgetInstance.emit("error", 404);
+                return;
+            }
 
             writeStream.on("finish", function () {
                 writeStream.close(() => {
