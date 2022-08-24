@@ -1,4 +1,4 @@
-# LinuxJSEdition  [[Video link](https://www.youtube.com/watch?v=sEWgsxxMXjs)]
+# LinuxJSEdition  [[Video link](https://www.youtube.com/watch?v=sEWgsxxMXjs)] ![GitHub repo size](https://img.shields.io/github/repo-size/Davilarek/LinuxJSEdition)
 ## Linux in Discord... is not a dream anymore!
 
 
