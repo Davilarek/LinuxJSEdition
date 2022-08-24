@@ -18,16 +18,22 @@ class wget {
 
         const request = adapterFor(url2).get(url2, (res) => {
             res.pipe(writeStream);
-
+            let error = false;
             if (res.statusCode == 404) {
                 // request.emit("error", 404);
-                myWgetInstance.emit("error", 404);
+                fs.unlink(file_name, () => {
+                    myWgetInstance.emit("error", 404);
+                });
+                error = true;
                 return;
             }
 
             writeStream.on("finish", function () {
                 writeStream.close(() => {
-                    myWgetInstance.emit("end");
+                    if (!error)
+                        myWgetInstance.emit("end");
+                    else
+                        myWgetInstance.emit("error", 404);
                 });
             });
         });
