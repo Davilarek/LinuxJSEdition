@@ -230,6 +230,7 @@ client.safeClient = {
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand,
 	"aptProtectedDir": ENV_VAR_APT_PROTECTED_DIR,
+	"machineInfo" : ENV_VAR_UNAME_STRING,
 };
 
 /**
@@ -2150,7 +2151,7 @@ function unameCommand(contextMsg) {
 					" -s, --kernel-name			Displays kernel name\n" +
 					" -n, --nodename 			Displays system network name\n" +
 					" -r, --kernel-release		Displays kernel release number\n" +
-					" -v, --kernel-version		Dispalys kernel version\n" +
+					" -v, --kernel-version		Displays kernel version\n" +
 					" -m, --machine				Displays architecture name\n" +
 					" -p, --processor 			Displays processor type (non-portable)\n" +
 					" -i, --hardware-platform	Displays hardware platform (non-portable)\n" +
