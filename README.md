@@ -21,11 +21,9 @@ LinuxJSEdition is a Discord bot that simulates Linux environment.
 
 Custom packages can be submitted to the apt repository so everyone can install them. Here is the [apt-repo].
 
-## Credits
+## Stuff used
 
-LinuxJSEdition uses a number of open source projects to work properly:
-
-- [discord.js] - bot
+- [discord.js] - module for making bots
 - Creator of Tux image in logo: `lewing@isc.tamu.edu and The GIMP`
 
 ## Installation
