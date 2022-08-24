@@ -681,7 +681,7 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`\n`what-branch` - `show currently used branch`");
 	}
 
-	if (contextMsg.content.split(" ")[1] == "change-branch") {
+	if (contextMsg.content.split(" ")[1] == "change-branch" && contextMsg.content.split(" ")[2]) {
 		// console.log(contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, ""))
 		contextMsg.channel.send("Read `/root/.config`...");
 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
