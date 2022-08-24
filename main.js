@@ -230,7 +230,8 @@ client.safeClient = {
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand,
 	"aptProtectedDir": ENV_VAR_APT_PROTECTED_DIR,
-	"machineInfo" : ENV_VAR_UNAME_STRING,
+	"machineInfo": ENV_VAR_UNAME_STRING,
+	"startupTimestamp": Date.now(),
 };
 
 /**
@@ -520,6 +521,12 @@ function aptCommand(contextMsg) {
 				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 
 				const mod = requireUncached(pFile);
+				if (mod.Options) {
+					if (mod.Options.upgradeFromGithubRequired == true) {
+						contextMsg.channel.send("Warning: this package requires full upgrade from Github. If you don't do this, except errors.");
+						console.log("Warning: this package (" + downloadNameNormalize + ") requires full upgrade from Github. If you don't do this, except errors.");
+					}
+				}
 				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 				packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
 
