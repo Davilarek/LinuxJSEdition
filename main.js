@@ -1930,7 +1930,12 @@ function shellFunctionProcessor(messageObject, variableList) {
 			// console.log(element);
 			if (element == messageObject.content.split(" ")[0]) {
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
-				externalCommandList[element](messageObject, variableList);
+				try {
+					externalCommandList[element](messageObject, variableList);
+				}
+				catch (error) {
+					console.log("Error occurred while executing " + element + ": ", error);
+				}
 			}
 		}
 		// console.log(client.commandOutputHistory);
