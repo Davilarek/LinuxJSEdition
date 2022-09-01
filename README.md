@@ -28,7 +28,7 @@ Custom packages can be submitted to the apt repository so everyone can install t
 
 ## Installation
 
-LinuxJSEdition requires [Node.js](https://nodejs.org/) v14+ to run.
+LinuxJSEdition requires [Node.js](https://nodejs.org/) v14+ (latest LTS recommended) to run.
 
 ##### Step 1.
 Download the repository (or clone), unzip, create new text file called "token.txt" and paste your bot token inside.
