@@ -183,7 +183,7 @@ client.cmdList = {
 	"sh": `runs a file executing every line with command from this list.`,
 	"ish": `runs provided command list executing every line with command from this list.`,
 	"echo": 'simple echo command. supports variables',
-	"secho": 'silent echo, prints to console',
+	"secho": 'silent echo, prints to bot\'s host console',
 	"export": 'makes a variable global',
 	"uname": 'prints certain system information. use "' + ENV_VAR_PREFIX + 'uname --help" for more help.',
 	"whoami": `displays current user (always root)`,
@@ -232,6 +232,7 @@ client.safeClient = {
 	"aptProtectedDir": ENV_VAR_APT_PROTECTED_DIR,
 	"machineInfo": ENV_VAR_UNAME_STRING,
 	"startupTimestamp": Date.now(),
+	"startBootSeq": startBootSeq,
 };
 
 /**
@@ -241,6 +242,8 @@ client.safeClient["bootChannel"] = null;
 
 // very unsafe
 // exports.cli = client;
+// but uh
+exports.clientExternal = client.safeClient;
 
 /**
  * Get commit count from Github and return it
@@ -410,6 +413,55 @@ function getHash() {
 	console.log(hex);
 }
 
+// cool name of course
+function startBootSeq(message) {
+	if (message["channel-id-only"]) {
+		client.channels.fetch(message["channel-id-only"]).then((chan) => {
+			message.channel = chan;
+			console.log("Got channel details after reboot. Trying to boot up using id...");
+		});
+		// message.channel = client.channels.cache.get(message["channel-id-only"]);
+	}
+
+	let checkTimer = 0;
+	checkTimer = setInterval(() => {
+		if (message.channel == null)
+			return;
+
+		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
+		if (VERSION < ENV_VAR_VERSION) {
+			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`.");
+		}
+
+		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+			if (file == "empty.txt") { return; }
+			console.log("Loading " + file + "...");
+			try {
+				const package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+				package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
+			}
+			catch (error) {
+				message.channel.send("An unexpected error occurred while trying to run package: " + file);
+				console.log(error);
+			}
+
+		});
+
+		client.safeClient["bootChannel"] = message.channel;
+		// cdCommand({
+		// 	content: "$cd $HOME",
+		// 	channel: ENV_VAR_NULL_CHANNEL
+		// })
+		shellFunctionProcessor(createFakeMessageObject(ENV_VAR_PREFIX + "cd $HOME"));
+		if (fs.existsSync(".bashrc"))
+			executeShFile(".bashrc", message);
+		ENV_VAR_BOOT_COMPLETE = true;
+		client.commandHistory.push({ ...client.commandHistory[0] });
+		client.commandHistory[0] = ENV_VAR_PREFIX + "boot";
+		clearInterval(checkTimer);
+	}, 500);
+}
+
 /**
  * (Re-)register all commands.
  */
@@ -421,34 +473,7 @@ function register() {
 
 		/* This code is the first thing that runs when the bot starts. It is used to load all of the packages that are in the autorun folder. */
 		if (message.content == ENV_VAR_PREFIX + "boot" && !ENV_VAR_BOOT_COMPLETE) {
-			message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
-			if (VERSION < ENV_VAR_VERSION) {
-				message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`.");
-			}
-			client.safeClient["bootChannel"] = message.channel;
-			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-				if (file == "empty.txt") { return; }
-				console.log("Loading " + file + "...");
-				try {
-					const package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, message.channel, ENV_VAR_BASE_DIR, client.safeClient);
-				}
-				catch (error) {
-					message.channel.send("An unexpected error occurred while trying to run package: " + file);
-					console.log(error);
-				}
-
-			});
-			// cdCommand({
-			// 	content: "$cd $HOME",
-			// 	channel: ENV_VAR_NULL_CHANNEL
-			// })
-			shellFunctionProcessor(createFakeMessageObject(ENV_VAR_PREFIX + "cd $HOME"));
-			if (fs.existsSync(".bashrc"))
-				executeShFile(".bashrc", message);
-			ENV_VAR_BOOT_COMPLETE = true;
-			client.commandHistory.push({ ...client.commandHistory[0] });
-			client.commandHistory[0] = ENV_VAR_PREFIX + "boot";
+			startBootSeq(message);
 			return;
 		}
 

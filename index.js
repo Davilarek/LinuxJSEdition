@@ -51,9 +51,12 @@ module.exports.Upgrade = function () {
 module.exports.Reboot = function (msg) {
     delete require.cache[require.resolve("./main.js")];
     mainFile = require("./main.js");
-    // console.log(msg)
-    // if (msg) {
-    //     let msgMod = { "content": "$boot", "channel": msg.channel };
-    //     mainFile.cli.executeCommand(msgMod);
-    // }
+    // console.log(msg);
+    if (msg != undefined) {
+        setTimeout(() => {
+            const msgMod = { "content": msg.content.split("reboot")[0] + "boot", "channel-id-only": msg.channel.id };
+            // console.log(msgMod);
+            mainFile.clientExternal.startBootSeq(msgMod);
+        }, 1000);
+    }
 };
