@@ -3,7 +3,7 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
-const VERSION = 212;
+const VERSION = 214;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
