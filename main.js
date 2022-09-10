@@ -3,7 +3,7 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
-const VERSION = 214;
+const VERSION = 215;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -430,7 +430,7 @@ function startBootSeq(message) {
 
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
 		if (VERSION < ENV_VAR_VERSION) {
-			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`.");
+			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
 		}
 
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
