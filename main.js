@@ -3,7 +3,7 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
-const VERSION = 217;
+const VERSION = 218;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -310,7 +310,8 @@ async function getAllRepoPackages() {
 			let package;
 			try {
 				package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-				package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+				// package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+				// why init it again
 			}
 			catch (error) {
 				// message.channel.send("An unexpected error occurred while trying to run package: " + file);
@@ -375,7 +376,8 @@ function getAllRepoPackagesRemake() {
 						let package;
 						try {
 							package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-							package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+							// package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
+							// why init it again
 						}
 						catch (error) {
 							// message.channel.send("An unexpected error occurred while trying to run package: " + file);
@@ -541,28 +543,28 @@ function aptCommand(contextMsg) {
 				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
 				//	console.log("t2");
 			}
-			fs.readFile(pFile, function (err, data) {
-				if (err) throw err;
-				contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
+			// fs.readFile(pFile, function (err, data) {
+			// 	if (err) throw err;
+			contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 
-				const mod = requireUncached(pFile);
-				if (mod.Options) {
-					if (mod.Options.upgradeFromGithubRequired == true) {
-						contextMsg.channel.send("Warning: this package requires full upgrade from Github. If you don't do this, except errors.");
-						console.log("Warning: this package (" + downloadNameNormalize + ") requires full upgrade from Github. If you don't do this, except errors.");
-					}
+			const mod = requireUncached(pFile);
+			if (mod.Options) {
+				if (mod.Options.upgradeFromGithubRequired == true) {
+					contextMsg.channel.send("Warning: this package requires full upgrade from Github. If you don't do this, except errors.");
+					console.log("Warning: this package (" + downloadNameNormalize + ") requires full upgrade from Github. If you don't do this, except errors.");
 				}
-				mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-				packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
+			}
+			mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+			packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
 
-				updatedCount += 1;
-				contextMsg.channel.send("Done").then(v => {
-					const end = performance.now();
-					const time = end - start;
-					contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-					makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled));
-				});
+			updatedCount += 1;
+			contextMsg.channel.send("Done").then(v => {
+				const end = performance.now();
+				const time = end - start;
+				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled));
 			});
+			// });
 		});
 		download.on('error', function (err) {
 			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
