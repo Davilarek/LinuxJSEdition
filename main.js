@@ -26,19 +26,19 @@ catch (e) {
 const Discord = require('discord.js');
 
 // sounds dangerous
-const open = Discord.TextChannel.prototype.send;
+const discordSend = Discord.TextChannel.prototype.send;
 
 /**
  * Replaces send function of TextChannel
  */
-function openReplacement(text) {
+function discordSendReplacement(text) {
 	// console.log(text);
 	client.commandOutputHistory.push(client.commandOutputHistory[0]);
 	client.commandOutputHistory[0] = text;
-	return open.apply(this, arguments);
+	return discordSend.apply(this, arguments);
 }
 
-Discord.TextChannel.prototype.send = openReplacement;
+Discord.TextChannel.prototype.send = discordSendReplacement;
 
 // doesn't work  ....
 // const fsReadFileSync = fs.readFileSync;
