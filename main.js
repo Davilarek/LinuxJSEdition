@@ -43,6 +43,20 @@ Discord.TextChannel.prototype.send = discordSendReplacement;
 // doesn't work  ....
 // const fsReadFileSync = fs.readFileSync;
 
+function installAdditionalReplacements() {
+	/* ----- */
+	// READFILESYNC
+	const originalReadFileSync = fs.readFileSync;
+	delete fs['readFileSync'];
+	fs.readFileSync = function (str) {
+		// console.log("The functionality has been overridden.");
+		// console.log(str);
+		return originalReadFileSync.apply(this, arguments);
+	};
+	module.exports = fs;
+	// READFILESYNC
+	/* ----- */
+}
 
 // main client + tools
 const client = new Discord.Client();
