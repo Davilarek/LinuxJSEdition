@@ -40,6 +40,10 @@ function openReplacement(text) {
 
 Discord.TextChannel.prototype.send = openReplacement;
 
+// doesn't work  ....
+// const fsReadFileSync = fs.readFileSync;
+
+
 // main client + tools
 const client = new Discord.Client();
 
@@ -58,6 +62,11 @@ const ENV_VAR_LIST = {
 		},
 	},
 	"$USER": "root",
+	"-": {
+		toString: function () {
+			return ENV_VAR_LIST["$OLDPWD"];
+		},
+	},
 };
 
 function getRandomInt(max) {
@@ -1030,8 +1039,10 @@ function cdCommand(contextMsg, variableList) {
 		if (path.resolve(pathCorrected).includes("VirtualDrive") && !path.resolve(pathCorrected).includes(ENV_VAR_APT_PROTECTED_DIR)) {
 			const stat = fs.lstatSync(pathCorrected);
 			if (stat.isFile() != true) {
+				client.safeClient.listEnv["$OLDPWD"] = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
 				process.chdir(pathCorrected);
 				const pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
+				client.safeClient.listEnv["$PWD"] = pwd;
 				// console.log(pwd.length);
 				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
 				// console.log(pwd.split("/")[pwd.split("/").length - 1])
