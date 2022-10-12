@@ -659,12 +659,14 @@ function aptCommand(contextMsg) {
 		 * @type {UpgradedPackage[]}
 		 */
 		const updatesInstalled = [];
+		const downloadsInProgress = [];
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
 			const makeURL = githubRepoUrl + branchName + "/" + file;
 			const download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
 			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
+			downloadsInProgress.push(download);
 			download.on('end', function (output) {
 				const package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
 				const packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
@@ -678,12 +680,28 @@ function aptCommand(contextMsg) {
 				}
 				delete require.cache[BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)];
 				delete require.cache[ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file];
+				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
+				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
 			});
 			download.on('error', function (err) {
 				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
+				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
+				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
 			});
 		});
-		setTimeout(function () {
+
+		const waitForDownloadsInProgressToBeEmpty = (cb, params) => {
+			if (!(downloadsInProgress.length == 0)) {
+				setTimeout(waitForDownloadsInProgressToBeEmpty, 100, cb, params);
+			}
+			else {
+				// CODE GOES IN HERE
+				cb(params);
+			}
+		};
+
+		// waitForConditionToBeTrue(downloadsInProgress, "length", 0, () => {
+		waitForDownloadsInProgressToBeEmpty(() => {
 			if (finished) {
 				client.removeAllListeners("message");
 				register();
@@ -713,7 +731,40 @@ function aptCommand(contextMsg) {
 				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
 				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
 			});
-		}, 1000);
+		});
+
+		// setTimeout(function () {
+		// 	if (finished && updatedCount > 0) {
+		// 		// if (finished) {
+		// 		client.removeAllListeners("message");
+		// 		register();
+		// 		// console.log("test");
+
+		// 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+		// 			if (file == "empty.txt") { return; }
+		// 			try {
+		// 				const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+		// 				package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+		// 				// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
+		// 				// console.log(typeof package.OnUpdate === 'function');
+		// 				// console.log("test");
+		// 				if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
+		// 					package.OnUpdate(null, contextMsg.channel);
+		// 				}
+		// 			}
+		// 			catch (error) {
+		// 				//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+		// 				console.log(error);
+		// 			}
+		// 		});
+		// 	}
+		// 	contextMsg.channel.send("Done.").then(v => {
+		// 		const end = performance.now();
+		// 		const time = end - start;
+		// 		contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+		// 		makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
+		// 	});
+		// }, 2500);
 	}
 
 	/* Send message with all packages in the repository. */
@@ -764,6 +815,18 @@ function aptCommand(contextMsg) {
 		contextMsg.channel.send(fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1]);
 	}
 }
+
+// function waitForConditionToBeTrue(objectToTest, property, target, cb, params) {
+// 	const currentState = objectToTest[property];
+// 	if (!(objectToTest[property] == target)) {
+// 		setTimeout(waitForConditionToBeTrue, 100, objectToTest, property, target, cb, params);
+// 	}
+// 	else {
+// 		// CODE GOES IN HERE
+// 		cb(params);
+// 	}
+// }
+
 /**
  *
  * @param {*} action
