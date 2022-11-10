@@ -187,6 +187,7 @@ built-in commands
 client.cmdList = {
 	"cmdlist": `displays list of available commands and description`,
 	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
+	"apropos": `shows list of commands that has specified keywords in their description`,
 	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
 	"ls": `display files in directory.`,
 	"tree": `displays the folder and file structure of a path`,
@@ -1942,6 +1943,21 @@ function shellFunctionProcessor(messageObject, variableList) {
 				messageObject.channel.send("`" + Object.keys(client.cmdList)[i] + "` - `" + Object.values(client.cmdList)[i] + "`\n");
 			}
 		}
+		return;
+	}
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apropos")) {
+		const final = [];
+		for (let index = 1; index < messageObject.content.split(" ").length; index++) {
+			const values = Object.values(client.cmdList).filter(element => element.includes(messageObject.content.split(" ")[index]));
+			for (let i = 0; i < values.length; i++) {
+				const value = values[i];
+				const key = Object.keys(client.cmdList).find(keyF => client.cmdList[keyF] === value);
+				final.push("`" + key + "`: " + "`" + value + "`");
+			}
+		}
+		if (!(final.length > 0))
+			final.push("nothing found");
+		messageObject.channel.send(final.join("\n"));
 		return;
 	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "upgrade-os")) {
