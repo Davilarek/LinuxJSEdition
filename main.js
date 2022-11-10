@@ -1840,7 +1840,8 @@ function shellFunctionProcessor(messageObject, variableList) {
 	if (!variableList)
 		variableList = {};
 
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.substring(messageObject.content.indexOf(" ") + 1) in client.cmdList) {
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.substring(messageObject.content.indexOf(" ") + 1) in client.cmdList) {
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.split(" ")[0].split(ENV_VAR_PREFIX)[1] in client.cmdList) {
 		variableList["$RANDOM"] = getRandomInt(32768);
 		client.commandHistory.push({ ...client.commandHistory[0] });
 		client.commandHistory[0] = messageObject.content;
