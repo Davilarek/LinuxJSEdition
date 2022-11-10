@@ -2065,8 +2065,13 @@ module.exports.CloseAndUpgrade = function () {
 };
 
 function executeShFile(filename, msg, customVarList) {
-	const fileContent = fs.readFileSync(filename, 'utf-8');
-	const lines = fileContent.split("\n");
+	const fileContent = "if [[true]]; then\n" + fs.readFileSync(filename, 'utf-8') + "\nfi";
+	let lines = fileContent.split("\n");
+	const linesRemake = [];
+	for (let index = 0; index < lines.length; index++) {
+		linesRemake.push(lines[index].trimStart());
+	}
+	lines = linesRemake;
 
 	let localVars = {};
 	if (customVarList)
@@ -2087,7 +2092,9 @@ function executeShFile(filename, msg, customVarList) {
 
 	// let ifs = []
 	// let ifAmount = 0;
+	const ifList = [];
 	for (let currentLineIndex = 0; currentLineIndex < lines.length; currentLineIndex++) {
+		// const element = lines[currentLineIndex].trimStart();
 		const element = lines[currentLineIndex];
 
 		console.log("Executing " + filename + ". Current line: " + currentLineIndex);
@@ -2162,12 +2169,104 @@ function executeShFile(filename, msg, customVarList) {
 		// 		// 		if (ifs[ifIndx - 1].lines[lnIndx] == currentLineIndex) {
 		// 		if (ifs[ifIndx].lines.includes(currentLineIndex)) {
 		// 			console.log("test")
-		if (msg) {
-			// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-			shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+
+		if (element.startsWith("if [[")) {
+			// let linesOffset = 0;
+			let skipEndLines = 0;
+			const ifLines = [];
+			for (let currentIfScanLineIndex = currentLineIndex + 1; currentIfScanLineIndex < lines.length; currentIfScanLineIndex++) {
+				const ifElement = lines[currentIfScanLineIndex];
+				// console.log(ifElement);
+				if (ifElement.startsWith("if [[")) {
+					skipEndLines++;
+					continue;
+				}
+				if (ifElement.startsWith("fi")) {
+					if (skipEndLines > 0) {
+						skipEndLines--;
+						continue;
+					}
+					break;
+				}
+				ifLines.push(currentIfScanLineIndex);
+			}
+			let condition = element.split("if [[")[1].split("]]; then")[0];
+			const allVars = { ...ENV_VAR_LIST, ...localVars };
+			for (let index = 0; index < Object.keys(allVars).length; index++) {
+				condition = condition.replaceAll(Object.keys(allVars)[index], Object.values(allVars)[index]);
+			}
+			// console.log(condition);
+			ifList.push(new IFStatement(currentLineIndex, condition, ifLines[ifLines.length - 1]));
+		}
+
+		// let closestIf = null;
+		// for (let index = 0; index < ifList.length; index++) {
+
+		// }
+		// if (ifList.length > 0) {
+		// 	const startingLines = ifList.map(p => p.startLine);
+		// 	const closestIfStart = startingLines.reduce(function (prev, curr) {
+		// 		return (Math.abs(curr - currentLineIndex) < Math.abs(prev - currentLineIndex) ? curr : prev);
+		// 	});
+		// 	const closestIf = ifList.filter(p => p.startLine == closestIfStart)[0];
+		// 	if (currentLineIndex == closestIf.startLine || currentLineIndex == closestIf.endLine + 1)
+		// 		continue;
+		// 	if (currentLineIndex >= closestIf.startLine && currentLineIndex <= closestIf.endLine + 1) {
+		// 		console.log("evaluating condition: " + closestIf.condition);
+		// 		if (Function('"use strict";return (' + closestIf.condition + ')')() == true) {
+		// 			console.log("condition ok");
+		// 		}
+		// 	}
+		// }
+
+		conditionChecker: if (ifList.length > 0) {
+			let ifsToSkip = 0;
+			let targetIf;
+			if (element.startsWith("if [[") || element.startsWith("fi")) {
+				break conditionChecker;
+			}
+			// for (let i = lines.length - 1; i >= 0; i--) {
+			for (let i = currentLineIndex; i >= 0; i--) {
+				if (i == lines.length - 1 && lines[lines.length - 1].startsWith("fi"))
+					continue;
+				if (lines[i].startsWith("fi")) {
+					ifsToSkip++;
+					continue;
+				}
+				if (lines[i].startsWith("if [[")) {
+					if (ifsToSkip > 0) {
+						ifsToSkip--;
+						continue;
+					}
+					targetIf = ifList.filter(p => p.startLine == i)[0];
+					break;
+				}
+			}
+			// console.log("evaluating condition: " + targetIf.condition);
+			if (Function('"use strict";return (' + targetIf.condition + ')')() == true) {
+				// console.log("condition ok");
+				if (msg) {
+					// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+					shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+				}
+				else
+					shellFunctionProcessor(createFakeMessageObject(element), localVars);
+			}
 		}
 		else
-			shellFunctionProcessor(createFakeMessageObject(element), localVars);
+			if (msg) {
+				// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+				shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+			}
+			else
+				shellFunctionProcessor(createFakeMessageObject(element), localVars);
+
+		// if (msg) {
+		// 	// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+		// 	shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+		// }
+		// else
+		// 	shellFunctionProcessor(createFakeMessageObject(element), localVars);
 		// 		}
 		// 		else {
 		// 			console.log("Reject " + currentLineIndex + ", not in array")
@@ -2199,6 +2298,7 @@ function executeShFile(filename, msg, customVarList) {
 
 		// shellFunctionProcessor()
 	}
+	// console.log(ifList);
 }
 
 function runAndGetOutput(msg, variableList) {
@@ -2345,6 +2445,15 @@ class TreeNode {
 	constructor(mainPath) {
 		this.path = mainPath;
 		this.children = [];
+	}
+}
+
+// for ifs
+class IFStatement {
+	constructor(startLine, condition, endLine) {
+		this.startLine = startLine;
+		this.condition = condition;
+		this.endLine = endLine;
 	}
 }
 
