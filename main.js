@@ -2530,7 +2530,7 @@ class IFStatement {
 // }
 
 const getFileStructure = () => {
-	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun"];
+	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun", "bin/builtin"];
 };
 
 console.log("Checking file structure...");
