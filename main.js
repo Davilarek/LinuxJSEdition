@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 246;
+const VERSION = 247;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -2043,7 +2043,13 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				try {
 					// removeClientFromMessageObject(messageObject);
-					const output = externalCommandList[element](recreateMessageObject(messageObject), variableList);
+					let output = externalCommandList[element](recreateMessageObject(messageObject), variableList);
+					if (output == undefined)
+						output = {
+							"then": () => {
+								return 0;
+							},
+						};
 					// console.log(output);
 					if (redirectReturn) {
 						return output;
