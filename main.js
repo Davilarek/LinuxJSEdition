@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 241;
+const VERSION = 242;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -2042,7 +2042,8 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 			if (element == messageObject.content.split(" ")[0]) {
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				try {
-					const output = externalCommandList[element](messageObject, variableList);
+					// removeClientFromMessageObject(messageObject);
+					const output = externalCommandList[element](recreateMessageObject(messageObject), variableList);
 					// console.log(output);
 					if (redirectReturn) {
 						return output;
@@ -2063,7 +2064,7 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 			if (element == messageObject.content.split(" ")[0]) {
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				// try {
-				const output = builtinCommandList[element](messageObject, variableList);
+				const output = builtinCommandList[element](recreateMessageObject(messageObject), variableList);
 				// console.log(output);
 				if (redirectReturn) {
 					return output;
@@ -2082,6 +2083,46 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		// console.log(client.commandOutputHistory);
 		// console.log(client.commandHistory);
 		return;
+	}
+}
+
+/**
+ * Seems safe right?
+ * @param {Discord.Message} original
+ * @returns {Object} message object safe
+ */
+function recreateMessageObject(original) {
+	return {
+		"content": original.content,
+		"channel": {
+			// "id": original.channel.id,
+			"send": (data) => {
+				// console.log(original.channel);
+				// console.log(data);
+				// client.channels.fetch(original.channel.id)
+				// 	.then(channel => channel.send(data));
+				original.channel.send(data);
+			},
+		},
+		"guild": {
+			"me": {
+				"setNickname": (data) => {
+					// client.guilds.fetch(original.guild.id)
+					// 	.then(guild => guild.me.setNickname(data));
+					original.guild.me.setNickname(data);
+				},
+			},
+		},
+	};
+}
+
+function removeClientFromMessageObject(obj) {
+	console.log("searching client in " + obj);
+	for (const prop in obj) {
+		if (prop === 'client')
+			delete obj[prop];
+		else if (typeof obj[prop] === 'object')
+			removeClientFromMessageObject(obj[prop]);
 	}
 }
 
