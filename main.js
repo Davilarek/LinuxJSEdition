@@ -298,6 +298,7 @@ client.safeClient = {
 	"startupNickname": ENV_VAR_STARTUP_NICKNAME,
 	"removeListeners": () => { client.removeAllListeners("message"); },
 	"readAptRepo": getAllRepoPackagesRemake,
+	"currentlyRunningProcesses": currentlyRunningProcesses,
 };
 
 /**
@@ -2062,23 +2063,29 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				try {
 					// removeClientFromMessageObject(messageObject);
 					const abortController = new AbortController();
+					const newProcessID = Date.now();
 					let output = externalCommandList[element](recreateMessageObject(messageObject), variableList, abortController);
-					currentlyRunningProcesses[Date.now()] = new LJSProcess("", Date.now(), "root", abortController);
-					console.log("Creating process with pid: " + Date.now());
+					currentlyRunningProcesses[newProcessID] = new LJSProcess(messageObject.content.split(" ")[0], newProcessID, "root", abortController);
+					console.log("Creating external process with pid: " + newProcessID);
 
 					if (output == undefined)
 						output = {
-							"then": () => {
-								return 0;
+							"then": (callback) => {
+								callback(0);
 							},
 						};
 					// console.log(output);
 					if (redirectReturn) {
-						return output;
+						// return output;
+						return { "promise": output, "pid": newProcessID };
 					}
 					output.then((commandOutput) => {
+						// console.log("process exit");
 						// console.log(commandOutput);
 						ENV_VAR_LIST["$?"] = commandOutput;
+						// currentlyRunningProcesses[newProcessID].exit();
+						// console.log(currentlyRunningProcesses);
+						delete currentlyRunningProcesses[newProcessID.toString()];
 					});
 				}
 				catch (error) {
@@ -2093,16 +2100,22 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				// try {
 				const abortController = new AbortController();
+				const newProcessID = Date.now();
 				const output = builtinCommandList[element](recreateMessageObject(messageObject), variableList, abortController);
-				currentlyRunningProcesses[Date.now()] = new LJSProcess("", Date.now(), "root", abortController);
-				console.log("Creating process with pid: " + Date.now());
+				currentlyRunningProcesses[newProcessID] = new LJSProcess(messageObject.content.split(" ")[0], newProcessID, "root", abortController);
+				console.log("Creating process with pid: " + newProcessID);
 				// console.log(output);
 				if (redirectReturn) {
-					return output;
+					// return output;
+					return { "promise": output, "pid": newProcessID };
 				}
 				output.then((commandOutput) => {
 					// console.log(commandOutput);
 					ENV_VAR_LIST["$?"] = commandOutput;
+					// currentlyRunningProcesses[newProcessID].exit();
+					// delete currentlyRunningProcesses[newProcessID];
+					// console.log(currentlyRunningProcesses);
+					delete currentlyRunningProcesses[newProcessID.toString()];
 					// console.log(variableList);
 				});
 				// }
@@ -2172,9 +2185,9 @@ function recreateMessageObject(original) {
 }
 
 class LJSProcess {
-	constructor(cacheName, id, user, abortController) {
+	constructor(commandName, id, user, abortController) {
 		this.isAlive = true;
-		this.filename = cacheName;
+		this.commandName = commandName;
 		this.pid = id;
 		this.user = user;
 		this.abortController = abortController;
@@ -2182,7 +2195,12 @@ class LJSProcess {
 	kill() {
 		// console.log(this.promise.toString());
 		this.abortController.abort();
+		this.isAlive = false;
+		delete currentlyRunningProcesses[this.pid];
 	}
+	// exit() {
+	// 	delete currentlyRunningProcesses[this.pid];
+	// }
 }
 
 function removeClientFromMessageObject(obj) {
@@ -2384,14 +2402,20 @@ async function executeShFile(filename, msg, customVarList) {
 					// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
 					const cmdOut = shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars, true);
 					// console.log(cmdOut);
-					await cmdOut;
+					if (cmdOut != undefined) {
+						await cmdOut.promise;
+						delete currentlyRunningProcesses[cmdOut.pid];
+					}
 					// console.log(cmdOut);
 				}
 				else {
 					// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
 					const cmdOut = await shellFunctionProcessor(createFakeMessageObject(element), localVars, true);
 					// console.log(cmdOut);
-					await cmdOut;
+					if (cmdOut != undefined) {
+						await cmdOut.promise;
+						delete currentlyRunningProcesses[cmdOut.pid];
+					}
 					// console.log(cmdOut);
 				}
 			}
