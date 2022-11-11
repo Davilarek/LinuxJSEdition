@@ -38,6 +38,7 @@ function discordSendReplacement(text) {
 	// console.log(text);
 	client.commandOutputHistory.push(client.commandOutputHistory[0]);
 	client.commandOutputHistory[0] = text;
+	client.outputEmitter.emit('message', text);
 	return discordSend.apply(this, arguments);
 }
 
@@ -278,6 +279,10 @@ client.registerCommand = (name, func, description) => {
 const currentlyRunningProcesses = {
 };
 
+const events = require('events');
+client.inputEmitter = new events.EventEmitter();
+client.outputEmitter = new events.EventEmitter();
+
 client.safeClient = {
 	"cmdList": client.cmdList,
 	"enableStdin": client.enableStdin,
@@ -298,6 +303,10 @@ client.safeClient = {
 	"startupNickname": ENV_VAR_STARTUP_NICKNAME,
 	"removeListeners": () => { client.removeAllListeners("message"); },
 	"readAptRepo": getAllRepoPackagesRemake,
+	"getConsoleEmitters": {
+		"input": client.inputEmitter,
+		"output": client.outputEmitter,
+	},
 	"currentlyRunningProcesses": currentlyRunningProcesses,
 };
 
@@ -1832,6 +1841,9 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		variableList["$RANDOM"] = getRandomInt(32768);
 		client.commandHistory.push({ ...client.commandHistory[0] });
 		client.commandHistory[0] = messageObject.content;
+	}
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && (messageObject.content.split(" ")[0] in externalCommandList || messageObject.content.split(" ")[0] in builtinCommandList)) {
+		client.inputEmitter.emit("message", messageObject.content);
 	}
 	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
 	// 	aptCommand(messageObject, variableList);
