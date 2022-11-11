@@ -2396,21 +2396,21 @@ async function executeShFile(filename, msg, customVarList) {
 				}
 			}
 		}
-		else
-			if (msg) {
-				// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-				const cmdOut = shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars, true);
-				// console.log(cmdOut);
-				await cmdOut;
-				// console.log(cmdOut);
-			}
-			else {
-				// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-				const cmdOut = await shellFunctionProcessor(createFakeMessageObject(element), localVars, true);
-				// console.log(cmdOut);
-				await cmdOut;
-				// console.log(cmdOut);
-			}
+		// else
+		// 	if (msg) {
+		// 		// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+		// 		const cmdOut = shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars, true);
+		// 		// console.log(cmdOut);
+		// 		await cmdOut;
+		// 		// console.log(cmdOut);
+		// 	}
+		// 	else {
+		// 		// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+		// 		const cmdOut = await shellFunctionProcessor(createFakeMessageObject(element), localVars, true);
+		// 		// console.log(cmdOut);
+		// 		await cmdOut;
+		// 		// console.log(cmdOut);
+		// 	}
 
 		// if (msg) {
 		// 	// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
