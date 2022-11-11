@@ -3,6 +3,9 @@
 // 16.05.2022 - I just realized that in real linux systems, you have access to binaries of commands instead of commands built in. when I think about it now, it's a huge mistake to use commands built in instead of modules.
 // at this moment, I'm too lazy to change it. I hope I will change it in the future.
 
+// 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
+// this is going to be painful
+
 const VERSION = 231;
 
 const executeTimestamp = performance.now();
@@ -101,6 +104,7 @@ const ENV_VAR_BOT_TOKEN = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "token.t
 // }
 
 const ENV_VAR_APT_PROTECTED_DIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "bin";
+const ENV_VAR_BUILTIN_BINARIES = ENV_VAR_APT_PROTECTED_DIR + path.sep + "builtin";
 const ENV_VAR_CONFIG_FILE = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "root" + path.sep + ".config";
 const ENV_VAR_APT_LOG_LOCATION = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "var" + path.sep + "log" + path.sep + "apt";
 const ENV_VAR_NULL_CHANNEL = {
@@ -174,6 +178,7 @@ client.on('ready', () => {
 	process.chdir('VirtualDrive');
 
 	ENV_VAR_STARTUP_NICKNAME = client.user.username;
+	client.safeClient.startupNickname = ENV_VAR_STARTUP_NICKNAME;
 	// ENV_VAR_STARTUP_NICKNAME = client.user.username;
 	console.log("Startup took " + (performance.now() - executeTimestamp) + "ms.");
 	register();
@@ -181,36 +186,46 @@ client.on('ready', () => {
 	// getHash();
 });
 
+if (!fs.existsSync(ENV_VAR_BUILTIN_BINARIES))
+	fs.mkdirSync(ENV_VAR_BUILTIN_BINARIES, { recursive: true });
+
 /*
 built-in commands
 */
+// client.cmdList = {
+// 	"cmdlist": `displays list of available commands and description`,
+// 	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
+// 	"apropos": `shows list of commands that has specified keywords in their description`,
+// 	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
+// 	"ls": `display files in directory.`,
+// 	"tree": `displays the folder and file structure of a path`,
+// 	"pwd": `print working directory.`,
+// 	"cd": `change directory.`,
+// 	"mkdir": `make directory`,
+// 	"cat": `read files`,
+// 	"wget": `download files from web`,
+// 	"cp": `copy file`,
+// 	"rmdir": `remove directory`,
+// 	"rm": `remove file`,
+// 	"mv": `move file`,
+// 	"touch": `create new file`,
+// 	"js": `execute js file from bin directory`,
+// 	"upgrade-os": `upgrade everything and re-download the os`,
+// 	"reboot": `reboots os`,
+// 	"sh": `runs a file executing every line with command from this list.`,
+// 	"ish": `runs provided command list executing every line with command from this list.`,
+// 	"echo": 'simple echo command. supports variables',
+// 	"secho": 'silent echo, prints to bot\'s host console',
+// 	"export": 'makes a variable global',
+// 	"uname": 'prints certain system information. use "' + ENV_VAR_PREFIX + 'uname --help" for more help.',
+// 	"whoami": `displays current user (always root)`,
+// };
+
 client.cmdList = {
 	"cmdlist": `displays list of available commands and description`,
 	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
-	"apropos": `shows list of commands that has specified keywords in their description`,
-	"apt": `Advanced Packaging Tool, used for managing packages. Use 'apt help' for sub-commands.`,
-	"ls": `display files in directory.`,
-	"tree": `displays the folder and file structure of a path`,
-	"pwd": `print working directory.`,
-	"cd": `change directory.`,
-	"mkdir": `make directory`,
-	"cat": `read files`,
-	"wget": `download files from web`,
-	"cp": `copy file`,
-	"rmdir": `remove directory`,
-	"rm": `remove file`,
-	"mv": `move file`,
-	"touch": `create new file`,
-	"js": `execute js file from bin directory`,
 	"upgrade-os": `upgrade everything and re-download the os`,
 	"reboot": `reboots os`,
-	"sh": `runs a file executing every line with command from this list.`,
-	"ish": `runs provided command list executing every line with command from this list.`,
-	"echo": 'simple echo command. supports variables',
-	"secho": 'silent echo, prints to bot\'s host console',
-	"export": 'makes a variable global',
-	"uname": 'prints certain system information. use "' + ENV_VAR_PREFIX + 'uname --help" for more help.',
-	"whoami": `displays current user (always root)`,
 };
 
 client.enableStdin = true;
@@ -227,6 +242,7 @@ client.commandOutputHistory = [];
 
 client.coolTools = {
 	"replaceAll": replaceAll,
+	"runAndGetOutput": runAndGetOutput,
 };
 
 /* Registering an external command. */
@@ -242,6 +258,16 @@ client.registerExternalCommand = (name, func, description) => {
 	console.log("Registered external command: " + name);
 };
 
+
+client.registerCommand = (name, func, description) => {
+
+	// if (name.startsWith("$"))
+	// 	name = name.substring(1);
+	builtinCommandList[ENV_VAR_PREFIX + name] = func;
+	client.safeClient.cmdList[name] = description;
+	console.log("Registered command: " + name);
+};
+
 client.safeClient = {
 	"cmdList": client.cmdList,
 	"enableStdin": client.enableStdin,
@@ -250,6 +276,7 @@ client.safeClient = {
 	"listEnv": ENV_VAR_LIST,
 	"config": ENV_VAR_CONFIG_FILE,
 	"fakeMessageCreator": client.fakeMessageCreator,
+	"fakeMessageFromOriginal": createMessageObjectFromMessageObject,
 	"commandOutputHistory": client.commandOutputHistory,
 	"coolTools": client.coolTools,
 	"registerExternalCommand": client.registerExternalCommand,
@@ -257,6 +284,10 @@ client.safeClient = {
 	"machineInfo": ENV_VAR_UNAME_STRING,
 	"startupTimestamp": Date.now(),
 	"startBootSeq": startBootSeq,
+	"prefix": ENV_VAR_PREFIX,
+	"startupNickname": ENV_VAR_STARTUP_NICKNAME,
+	"removeListeners": () => { client.removeAllListeners("message"); },
+	"readAptRepo": getAllRepoPackagesRemake,
 };
 
 /**
@@ -268,21 +299,6 @@ client.safeClient["bootChannel"] = null;
 // exports.cli = client;
 // but uh
 exports.clientExternal = client.safeClient;
-
-/**
- * Get commit count from Github and return it
- * @returns The latest commit count.
- */
-async function getVersion() {
-	const bent = require('bent');
-	const getHeaders = bent('https://api.github.com');
-	// you may want to change this
-	const str = getHeaders("/repos/Davilarek/LinuxJSEdition/commits?sha=master&per_page=1&page=1", null, { 'User-Agent': 'request' });
-	const a = await str;
-	const result = a.headers.link.split("https://api.github.com")[2].split("&")[2].split("=")[1].split(">")[0];
-
-	return result;
-}
 
 /**
  * Get commit count from Github and return it, but without using external libraries
@@ -300,59 +316,6 @@ function getVersionRemake() {
 			console.error(err);
 		}).end();
 	});
-}
-
-/**
- * Get all the packages from the apt-repo repository
- */
-async function getAllRepoPackages() {
-	// btw did I mention I don't like async/await?
-	const bent = require('bent');
-	const getJSON = bent('json');
-	const repoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 3] + "/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/")[fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1].split("/").length - 2];
-	//	console.log(repoUrl);
-	const str = getJSON("https://api.github.com/repos/" + repoUrl + "/git/trees/" + fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1], null, { 'User-Agent': 'request' });
-	const a = await str;
-	//	console.log(a);
-	const tree = await a.tree;
-	const packages = [];
-	for (let i = 0; i < tree.length; i++) {
-		if (path.extname(tree[i].path) != ".js") { continue; }
-		//	console.log(tree[i].path);
-		let ready = tree[i].path.replace("-install.js", "");
-		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-			// console.log(file);
-			if (file == "empty.txt") { return; }
-			// let addInstalled = false;
-			// console.log(file)
-			if (tree[i].path != file)
-				return;
-			// console.log(addInstalled)
-
-			// \/ replace with require.cache check
-
-			let package;
-			try {
-				package = require(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-				// package.Init(null, ENV_VAR_NULL_CHANNEL, ENV_VAR_BASE_DIR, client.safeClient);
-				// why init it again
-			}
-			catch (error) {
-				// message.channel.send("An unexpected error occurred while trying to run package: " + file);
-				console.log(error);
-			}
-			// if (addInstalled) {
-			ready += "/" + package.Version + " [installed]";
-			// }
-			// else {
-			// }
-		});
-		if (!ready.endsWith("[installed]"))
-			ready += "/unknown version";
-		// console.log(ready)
-		packages.push(ready);
-	}
-	return packages;
 }
 
 /**
@@ -426,19 +389,6 @@ function getAllRepoPackagesRemake() {
 	});
 }
 
-function getHash() {
-	const crypto = require('crypto');
-
-	console.log(__filename);
-	const fileBuffer = fs.readFileSync(__filename);
-	const hashSum = crypto.createHash('sha1');
-	hashSum.update(fileBuffer);
-
-	const hex = hashSum.digest('hex');
-
-	console.log(hex);
-}
-
 // cool name of course
 function startBootSeq(message) {
 	if (message["channel-id-only"]) {
@@ -453,7 +403,7 @@ function startBootSeq(message) {
 	checkTimer = setInterval(() => {
 		if (message.channel == null)
 			return;
-
+		message.channel.send("WARNING RUNNING REWRITE EDITION!!! IT'S BROKEN NOW");
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
 		if (VERSION < ENV_VAR_VERSION) {
 			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
@@ -488,11 +438,35 @@ function startBootSeq(message) {
 	}, 500);
 }
 
+const registerCommandObject = {
+	"registerCommand": client.registerCommand,
+	"createConsoleMessageObject": createConsoleMessageObject,
+	"registerAllCommands": register,
+};
+
 /**
  * (Re-)register all commands.
  */
 function register() {
 	console.log("Registering commands...");
+	console.log("Registering built-ins...");
+	let finishedLoading = 0;
+	fs.readdirSync(ENV_VAR_BUILTIN_BINARIES).forEach(file => {
+		if (file == "empty.txt") { return; }
+		console.log("Loading " + file + "...");
+
+		try {
+			const package = require(ENV_VAR_BUILTIN_BINARIES + path.sep + file);
+			package.Init(null, null, ENV_VAR_BASE_DIR, { ...client.safeClient, ...registerCommandObject });
+			finishedLoading++;
+			console.log("Loaded " + finishedLoading + " out of " + fs.readdirSync(ENV_VAR_BUILTIN_BINARIES).length);
+		}
+		catch (error) {
+			console.log("An unexpected error occurred while trying to run package: " + file);
+			console.log(error);
+		}
+	});
+	console.log("Finished loading built-ins. Registering commands...");
 	client.on("message", (message) => {
 		if (message.author.bot) return;
 		//	console.log("test");
@@ -1831,13 +1805,14 @@ function createConsoleMessageObject(text) {
 }
 
 function createMessageObjectFromMessageObject(text, original) {
-	const messageObject = { "content": text, "channel": original.channel, "guild": original.guild };
+	const messageObject = { "content": text, "channel": original.channel, "guild": original.guild, "author": original.author };
 	return messageObject;
 }
 
 const externalCommandList = {};
+const builtinCommandList = {};
 
-function shellFunctionProcessor(messageObject, variableList) {
+function shellFunctionProcessor(messageObject, variableList, redirectReturn = false) {
 	if (!variableList)
 		variableList = {};
 
@@ -1847,82 +1822,82 @@ function shellFunctionProcessor(messageObject, variableList) {
 		client.commandHistory.push({ ...client.commandHistory[0] });
 		client.commandHistory[0] = messageObject.content;
 	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt remove")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt update")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt list-all")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt help")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt change-branch")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt what-branch")) {
-		aptCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ls")) {
-		lsCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "tree")) {
-		treeCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "pwd")) {
-		pwdCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cd")) {
-		cdCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mkdir")) {
-		mkdirCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cat")) {
-		catCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "wget")) {
-		wgetCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cp")) {
-		cpCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rmdir")) {
-		rmdirCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rm")) {
-		rmCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mv")) {
-		mvCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "touch")) {
-		touchCommand(messageObject, variableList);
-		return;
-	}
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt remove")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt update")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt list-all")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt help")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt change-branch")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt what-branch")) {
+	// 	aptCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ls")) {
+	// 	lsCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "tree")) {
+	// 	treeCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "pwd")) {
+	// 	pwdCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cd")) {
+	// 	cdCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mkdir")) {
+	// 	mkdirCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cat")) {
+	// 	catCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "wget")) {
+	// 	wgetCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "cp")) {
+	// 	cpCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rmdir")) {
+	// 	rmdirCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "rm")) {
+	// 	rmCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "mv")) {
+	// 	mvCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "touch")) {
+	// 	touchCommand(messageObject, variableList);
+	// 	return;
+	// }
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "js")) {
 		jsCommand(messageObject, variableList);
 		return;
@@ -1968,22 +1943,22 @@ function shellFunctionProcessor(messageObject, variableList) {
 		RebootOS(messageObject);
 		return;
 	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "echo")) {
-		echoCommand(messageObject, variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "secho")) {
-		echoCommand(createConsoleMessageObject(messageObject.content), variableList);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "export")) {
-		exportCommand(messageObject);
-		return;
-	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "uname")) {
-		unameCommand(messageObject);
-		return;
-	}
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "echo")) {
+	// 	echoCommand(messageObject, variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "secho")) {
+	// 	echoCommand(createConsoleMessageObject(messageObject.content), variableList);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "export")) {
+	// 	exportCommand(messageObject);
+	// 	return;
+	// }
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "uname")) {
+	// 	unameCommand(messageObject);
+	// 	return;
+	// }
 	// inline sh
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "ish")) {
 		// console.log(messageObject.content);
@@ -2014,10 +1989,10 @@ function shellFunctionProcessor(messageObject, variableList) {
 			fs.rmSync(tempFileName);
 		}
 	}
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "whoami")) {
-		whoamiCommand(messageObject);
-		return;
-	}
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "whoami")) {
+	// 	whoamiCommand(messageObject);
+	// 	return;
+	// }
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "sh")) {
 		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
 			messageObject.channel.send("Error: filename required"); return;
@@ -2063,11 +2038,41 @@ function shellFunctionProcessor(messageObject, variableList) {
 			if (element == messageObject.content.split(" ")[0]) {
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				try {
-					externalCommandList[element](messageObject, variableList);
+					const output = externalCommandList[element](messageObject, variableList);
+					// console.log(output);
+					if (redirectReturn) {
+						return output;
+					}
+					output.then((commandOutput) => {
+						// console.log(commandOutput);
+						ENV_VAR_LIST["$?"] = commandOutput;
+					});
 				}
 				catch (error) {
 					console.log("Error occurred while executing " + element + ": ", error);
 				}
+			}
+		}
+		for (let internalCommandIndex = 0; internalCommandIndex < Object.keys(builtinCommandList).length; internalCommandIndex++) {
+			const element = Object.keys(builtinCommandList)[internalCommandIndex];
+			// console.log(element);
+			if (element == messageObject.content.split(" ")[0]) {
+				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
+				// try {
+				const output = builtinCommandList[element](messageObject, variableList);
+				// console.log(output);
+				if (redirectReturn) {
+					return output;
+				}
+				output.then((commandOutput) => {
+					// console.log(commandOutput);
+					ENV_VAR_LIST["$?"] = commandOutput;
+					// console.log(variableList);
+				});
+				// }
+				// catch (error) {
+				// 	console.log("Error occurred while executing " + element + ": ", error);
+				// }
 			}
 		}
 		// console.log(client.commandOutputHistory);
@@ -2080,7 +2085,7 @@ module.exports.CloseAndUpgrade = function () {
 	UpgradeOS();
 };
 
-function executeShFile(filename, msg, customVarList) {
+async function executeShFile(filename, msg, customVarList) {
 	const fileContent = "if [[true]]; then\n" + fs.readFileSync(filename, 'utf-8') + "\nfi";
 	let lines = fileContent.split("\n");
 	const linesRemake = [];
@@ -2209,7 +2214,7 @@ function executeShFile(filename, msg, customVarList) {
 			let condition = element.split("if [[")[1].split("]]; then")[0];
 			const allVars = { ...ENV_VAR_LIST, ...localVars };
 			for (let index = 0; index < Object.keys(allVars).length; index++) {
-				condition = condition.replaceAll(Object.keys(allVars)[index], Object.values(allVars)[index]);
+				condition = await condition.replaceAll(Object.keys(allVars)[index], Object.values(allVars)[index]);
 			}
 			// console.log(condition);
 			ifList.push(new IFStatement(currentLineIndex, condition, ifLines[ifLines.length - 1]));
@@ -2259,23 +2264,39 @@ function executeShFile(filename, msg, customVarList) {
 				}
 			}
 			// console.log("evaluating condition: " + targetIf.condition);
-			if (Function('"use strict";return (' + targetIf.condition + ')')() == true) {
+			if (await Function('"use strict";return (' + targetIf.condition + ')')() == true) {
 				// console.log("condition ok");
 				if (msg) {
 					// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-					shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+					const cmdOut = shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars, true);
+					// console.log(cmdOut);
+					await cmdOut;
+					// console.log(cmdOut);
 				}
-				else
-					shellFunctionProcessor(createFakeMessageObject(element), localVars);
+				else {
+					// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+					const cmdOut = await shellFunctionProcessor(createFakeMessageObject(element), localVars, true);
+					// console.log(cmdOut);
+					await cmdOut;
+					// console.log(cmdOut);
+				}
 			}
 		}
 		else
 			if (msg) {
 				// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
-				shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars);
+				const cmdOut = shellFunctionProcessor(createMessageObjectFromMessageObject(element, msg), localVars, true);
+				// console.log(cmdOut);
+				await cmdOut;
+				// console.log(cmdOut);
 			}
-			else
-				shellFunctionProcessor(createFakeMessageObject(element), localVars);
+			else {
+				// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
+				const cmdOut = await shellFunctionProcessor(createFakeMessageObject(element), localVars, true);
+				// console.log(cmdOut);
+				await cmdOut;
+				// console.log(cmdOut);
+			}
 
 		// if (msg) {
 		// 	// const msgMod = { "content": element, "channel": msg.channel, "guild": msg.guild };
@@ -2322,98 +2343,98 @@ function runAndGetOutput(msg, variableList) {
 	return client.commandOutputHistory[0];
 }
 
-function exportCommand(contextMsg, variableList) {
-	if (!contextMsg.content.split(" ")[1]) {
-		let combined = "";
-		for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
-			const element = Object.keys(ENV_VAR_LIST)[i];
-			if (element == "~")
-				continue;
-			combined += "export " + element.replace("$", '') + "=" + Object.values(ENV_VAR_LIST)[i] + "\n";
-		}
-		contextMsg.channel.send(combined);
-		return;
-	}
-	console.log("Exporting variable " + "$" + contextMsg.content.split(" ")[1].split("=")[0] + "...");
-	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
-}
+// function exportCommand(contextMsg, variableList) {
+// 	if (!contextMsg.content.split(" ")[1]) {
+// 		let combined = "";
+// 		for (let i = 0; i < Object.keys(ENV_VAR_LIST).length; i++) {
+// 			const element = Object.keys(ENV_VAR_LIST)[i];
+// 			if (element == "~")
+// 				continue;
+// 			combined += "export " + element.replace("$", '') + "=" + Object.values(ENV_VAR_LIST)[i] + "\n";
+// 		}
+// 		contextMsg.channel.send(combined);
+// 		return;
+// 	}
+// 	console.log("Exporting variable " + "$" + contextMsg.content.split(" ")[1].split("=")[0] + "...");
+// 	ENV_VAR_LIST["$" + contextMsg.content.split(" ")[1].split("=")[0]] = contextMsg.content.split(" ")[1].split("=")[1];
+// }
 
-function unameCommand(contextMsg) {
-	if (!contextMsg.content.split(" ")[1]) {
-		contextMsg.channel.send("LinuxJSEdition");
-		return;
-	}
-	if (contextMsg.content.split(" ")[1].startsWith("-")) {
-		// contextMsg.channel.send("LinuxJSEdition");
-		const option = contextMsg.content.split(" ")[1].replace("-", "");
-		// console.log(option);
-		let output = "";
-		switch (option) {
-			case "-all":
-			case "a":
-				output = replaceAll(Object.values(ENV_VAR_UNAME_STRING).join(" "), " unknown", "");
-				break;
-			case "-kernel-name":
-			case "s":
-				output = ENV_VAR_UNAME_STRING.KERNEL_NAME;
-				break;
-			case "-nodename":
-			case "n":
-				output = ENV_VAR_UNAME_STRING.NODENAME;
-				break;
-			case "-kernel-release":
-			case "r":
-				output = ENV_VAR_UNAME_STRING.KERNEL_RELEASE;
-				break;
-			case "-kernel-version":
-			case "v":
-				output = ENV_VAR_UNAME_STRING.KERNEL_VERSION;
-				break;
-			case "-machine":
-			case "m":
-				output = ENV_VAR_UNAME_STRING.MACHINE;
-				break;
-			case "-processor":
-			case "p":
-				output = ENV_VAR_UNAME_STRING.PROCESSOR;
-				break;
-			case "-hardware-platform":
-			case "i":
-				output = ENV_VAR_UNAME_STRING.HARDWARE_PLATFORM;
-				break;
-			case "-operating-system":
-			case "o":
-				output = ENV_VAR_UNAME_STRING.PLATFORM;
-				break;
-			case "-help":
-				// i spent too much time on this
-				// but in the end it still looks ugly
-				output = "Usage: uname [option]\n\n" +
-					"When no option is specified, the output is the same as the -s option.\n\n" +
-					"Options:\n" +
-					" -a, --all					Displays all options in this order, excluding -p and -i if unknown.\n" +
-					" -s, --kernel-name			Displays kernel name\n" +
-					" -n, --nodename 			Displays system network name\n" +
-					" -r, --kernel-release		Displays kernel release number\n" +
-					" -v, --kernel-version		Displays kernel version\n" +
-					" -m, --machine				Displays architecture name\n" +
-					" -p, --processor 			Displays processor type (non-portable)\n" +
-					" -i, --hardware-platform	Displays hardware platform (non-portable)\n" +
-					" -o, --operating-system 	Displays operating system name\n" +
-					" --help				 	Displays this help and exit";
-				break;
-			default:
-				return;
-			// break;
-		}
-		contextMsg.channel.send("```\n" + output + "\n```");
-		return;
-	}
-}
+// function unameCommand(contextMsg) {
+// 	if (!contextMsg.content.split(" ")[1]) {
+// 		contextMsg.channel.send("LinuxJSEdition");
+// 		return;
+// 	}
+// 	if (contextMsg.content.split(" ")[1].startsWith("-")) {
+// 		// contextMsg.channel.send("LinuxJSEdition");
+// 		const option = contextMsg.content.split(" ")[1].replace("-", "");
+// 		// console.log(option);
+// 		let output = "";
+// 		switch (option) {
+// 			case "-all":
+// 			case "a":
+// 				output = replaceAll(Object.values(ENV_VAR_UNAME_STRING).join(" "), " unknown", "");
+// 				break;
+// 			case "-kernel-name":
+// 			case "s":
+// 				output = ENV_VAR_UNAME_STRING.KERNEL_NAME;
+// 				break;
+// 			case "-nodename":
+// 			case "n":
+// 				output = ENV_VAR_UNAME_STRING.NODENAME;
+// 				break;
+// 			case "-kernel-release":
+// 			case "r":
+// 				output = ENV_VAR_UNAME_STRING.KERNEL_RELEASE;
+// 				break;
+// 			case "-kernel-version":
+// 			case "v":
+// 				output = ENV_VAR_UNAME_STRING.KERNEL_VERSION;
+// 				break;
+// 			case "-machine":
+// 			case "m":
+// 				output = ENV_VAR_UNAME_STRING.MACHINE;
+// 				break;
+// 			case "-processor":
+// 			case "p":
+// 				output = ENV_VAR_UNAME_STRING.PROCESSOR;
+// 				break;
+// 			case "-hardware-platform":
+// 			case "i":
+// 				output = ENV_VAR_UNAME_STRING.HARDWARE_PLATFORM;
+// 				break;
+// 			case "-operating-system":
+// 			case "o":
+// 				output = ENV_VAR_UNAME_STRING.PLATFORM;
+// 				break;
+// 			case "-help":
+// 				// i spent too much time on this
+// 				// but in the end it still looks ugly
+// 				output = "Usage: uname [option]\n\n" +
+// 					"When no option is specified, the output is the same as the -s option.\n\n" +
+// 					"Options:\n" +
+// 					" -a, --all					Displays all options in this order, excluding -p and -i if unknown.\n" +
+// 					" -s, --kernel-name			Displays kernel name\n" +
+// 					" -n, --nodename 			Displays system network name\n" +
+// 					" -r, --kernel-release		Displays kernel release number\n" +
+// 					" -v, --kernel-version		Displays kernel version\n" +
+// 					" -m, --machine				Displays architecture name\n" +
+// 					" -p, --processor 			Displays processor type (non-portable)\n" +
+// 					" -i, --hardware-platform	Displays hardware platform (non-portable)\n" +
+// 					" -o, --operating-system 	Displays operating system name\n" +
+// 					" --help				 	Displays this help and exit";
+// 				break;
+// 			default:
+// 				return;
+// 			// break;
+// 		}
+// 		contextMsg.channel.send("```\n" + output + "\n```");
+// 		return;
+// 	}
+// }
 
-function whoamiCommand(contextMsg) {
-	contextMsg.channel.send(ENV_VAR_LIST["$USER"]);
-}
+// function whoamiCommand(contextMsg) {
+// 	contextMsg.channel.send(ENV_VAR_LIST["$USER"]);
+// }
 
 const mathChars = [
 	"+",
@@ -2464,15 +2485,6 @@ class TreeNode {
 	}
 }
 
-// for ifs
-class IFStatement {
-	constructor(startLine, condition, endLine) {
-		this.startLine = startLine;
-		this.condition = condition;
-		this.endLine = endLine;
-	}
-}
-
 function buildTree(pathToRoot) {
 	const root = new TreeNode(pathToRoot);
 
@@ -2496,6 +2508,15 @@ function buildTree(pathToRoot) {
 		}
 	}
 	return root;
+}
+
+// for ifs
+class IFStatement {
+	constructor(startLine, condition, endLine) {
+		this.startLine = startLine;
+		this.condition = condition;
+		this.endLine = endLine;
+	}
 }
 
 // apt upgrade
