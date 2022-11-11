@@ -498,298 +498,298 @@ function register() {
 	console.log("Registered about " + Object.keys(client.safeClient.cmdList).length + " commands.");
 }
 
-/**
- * This function is used to install, remove or update packages.
- * @param contextMsg - The message that triggered the command.
- */
-function aptCommand(contextMsg) {
-	/* This code is responsible for installing a package. */
-	if (contextMsg.content.split(" ")[1] == "install") {
-		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		const start = performance.now();
-		let updatedCount = 0;
-		const downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		contextMsg.channel.send("Reading config...");
-		const branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
-		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		const githubRepoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
-		const makeURL = githubRepoUrl + branchName + "/" + downloadNameNormalize + "-install.js";
-		const downloadDir = ENV_VAR_APT_PROTECTED_DIR;
-		contextMsg.channel.send("Get " + makeURL + "...");
-		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
-		const parsed = url.parse(makeURL);
-		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
-		let download = null;
-		/**
-		 * @type {UpgradedPackage[]}
-		 */
-		const packagesInstalled = [];
-		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
-			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
-		}
-		else {
-			download = wget.download(makeURL, downloadDir + path.sep + path.basename(parsed.pathname));
-		}
-		download.on('end', function (output) {
-			contextMsg.channel.send("Download complete.");
-			let pFile = null;
-			if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
-				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
-				//	console.log("t1");
-			}
-			else {
-				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
-				//	console.log("t2");
-			}
-			// fs.readFile(pFile, function (err, data) {
-			// 	if (err) throw err;
-			contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
+// /**
+//  * This function is used to install, remove or update packages.
+//  * @param contextMsg - The message that triggered the command.
+//  */
+// function aptCommand(contextMsg) {
+// 	/* This code is responsible for installing a package. */
+// 	if (contextMsg.content.split(" ")[1] == "install") {
+// 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
+// 		const start = performance.now();
+// 		let updatedCount = 0;
+// 		const downloadNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+// 		contextMsg.channel.send("Reading config...");
+// 		const branchName = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[2].split('=')[1];
+// 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
+// 		const githubRepoUrl = fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[1].split('=')[1];
+// 		const makeURL = githubRepoUrl + branchName + "/" + downloadNameNormalize + "-install.js";
+// 		const downloadDir = ENV_VAR_APT_PROTECTED_DIR;
+// 		contextMsg.channel.send("Get " + makeURL + "...");
+// 		if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
+// 		const parsed = url.parse(makeURL);
+// 		contextMsg.channel.send("Downloading `" + path.basename(parsed.pathname) + "`...");
+// 		let download = null;
+// 		/**
+// 		 * @type {UpgradedPackage[]}
+// 		 */
+// 		const packagesInstalled = [];
+// 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
+// 			download = wget.download(makeURL, downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname));
+// 		}
+// 		else {
+// 			download = wget.download(makeURL, downloadDir + path.sep + path.basename(parsed.pathname));
+// 		}
+// 		download.on('end', function (output) {
+// 			contextMsg.channel.send("Download complete.");
+// 			let pFile = null;
+// 			if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
+// 				pFile = downloadDir + path.sep + "autorun" + path.sep + path.basename(parsed.pathname);
+// 				//	console.log("t1");
+// 			}
+// 			else {
+// 				pFile = downloadDir + path.sep + path.basename(parsed.pathname);
+// 				//	console.log("t2");
+// 			}
+// 			// fs.readFile(pFile, function (err, data) {
+// 			// 	if (err) throw err;
+// 			contextMsg.channel.send("Setting up \"" + downloadNameNormalize + "\"...");
 
-			const mod = requireUncached(pFile);
-			if (mod.Options) {
-				if (mod.Options.upgradeFromGithubRequired == true) {
-					contextMsg.channel.send("Warning: this package requires full upgrade from Github. If you don't do this, except errors.");
-					console.log("Warning: this package (" + downloadNameNormalize + ") requires full upgrade from Github. If you don't do this, except errors.");
-				}
-			}
-			mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-			packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
+// 			const mod = requireUncached(pFile);
+// 			if (mod.Options) {
+// 				if (mod.Options.upgradeFromGithubRequired == true) {
+// 					contextMsg.channel.send("Warning: this package requires full upgrade from Github. If you don't do this, except errors.");
+// 					console.log("Warning: this package (" + downloadNameNormalize + ") requires full upgrade from Github. If you don't do this, except errors.");
+// 				}
+// 			}
+// 			mod.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+// 			packagesInstalled.push(new UpgradedPackage(mod.Version, mod.Version, downloadNameNormalize, makeURL));
 
-			updatedCount += 1;
-			contextMsg.channel.send("Done").then(v => {
-				const end = performance.now();
-				const time = end - start;
-				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled));
-			});
-			// });
-		});
-		download.on('error', function (err) {
-			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
-		});
-	}
+// 			updatedCount += 1;
+// 			contextMsg.channel.send("Done").then(v => {
+// 				const end = performance.now();
+// 				const time = end - start;
+// 				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+// 				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("install", start, end, packagesInstalled));
+// 			});
+// 			// });
+// 		});
+// 		download.on('error', function (err) {
+// 			contextMsg.channel.send("No package found with name \"" + downloadNameNormalize + "\".");
+// 		});
+// 	}
 
-	/* This code is responsible for removing a package from the system. */
-	if (contextMsg.content.split(" ")[1] == "remove") {
-		if (contextMsg.content.split(" ")[2] == undefined) { return; }
-		const start = performance.now();
-		let updatedCount = 0;
-		const removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		let removeDir = null;
-		/**
-		 * @type {UpgradedPackage[]}
-		 */
-		const packagesRemoved = [];
-		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
-			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
-		}
-		else {
-			removeDir = ENV_VAR_APT_PROTECTED_DIR;
-		}
-		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
-		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
-			//	delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
-			const targetPackage = requireUncached(removeDir + path.sep + removeNameNormalize + "-install.js");
-			packagesRemoved.push(new UpgradedPackage(targetPackage.Version, targetPackage.Version, removeNameNormalize, ""));
+// 	/* This code is responsible for removing a package from the system. */
+// 	if (contextMsg.content.split(" ")[1] == "remove") {
+// 		if (contextMsg.content.split(" ")[2] == undefined) { return; }
+// 		const start = performance.now();
+// 		let updatedCount = 0;
+// 		const removeNameNormalize = contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+// 		let removeDir = null;
+// 		/**
+// 		 * @type {UpgradedPackage[]}
+// 		 */
+// 		const packagesRemoved = [];
+// 		if (fs.readFileSync(ENV_VAR_CONFIG_FILE).toString().split("\n")[0].split('=')[1] == "true") {
+// 			removeDir = ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun";
+// 		}
+// 		else {
+// 			removeDir = ENV_VAR_APT_PROTECTED_DIR;
+// 		}
+// 		if (!fs.existsSync(removeDir)) fs.mkdirSync(removeDir);
+// 		if (fs.existsSync(removeDir + path.sep + removeNameNormalize + "-install.js")) {
+// 			//	delete require.cache[removeDir + path.sep + removeNameNormalize + "-install.js"];
+// 			const targetPackage = requireUncached(removeDir + path.sep + removeNameNormalize + "-install.js");
+// 			packagesRemoved.push(new UpgradedPackage(targetPackage.Version, targetPackage.Version, removeNameNormalize, ""));
 
-			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
+// 			fs.rmSync(removeDir + path.sep + removeNameNormalize + "-install.js");
 
-			client.removeAllListeners("message");
-			register();
-			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-				if (file == "empty.txt") { return; }
-				try {
-					const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+// 			client.removeAllListeners("message");
+// 			register();
+// 			fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+// 				if (file == "empty.txt") { return; }
+// 				try {
+// 					const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+// 					package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
 
-				}
-				catch (error) {
-					contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
-				}
-			});
-			updatedCount += 1;
-			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
-				const end = performance.now();
-				const time = end - start;
-				contextMsg.channel.send(updatedCount + " package(s) were removed in " + parseInt(time).toFixed() + "ms.");
-				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("remove", start, end, packagesRemoved));
-			});
-		}
-		else {
-			contextMsg.channel.send(removeNameNormalize + " not found.");
-		}
-	}
+// 				}
+// 				catch (error) {
+// 					contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+// 				}
+// 			});
+// 			updatedCount += 1;
+// 			contextMsg.channel.send(removeNameNormalize + " removed successfully.").then(v => {
+// 				const end = performance.now();
+// 				const time = end - start;
+// 				contextMsg.channel.send(updatedCount + " package(s) were removed in " + parseInt(time).toFixed() + "ms.");
+// 				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("remove", start, end, packagesRemoved));
+// 			});
+// 		}
+// 		else {
+// 			contextMsg.channel.send(removeNameNormalize + " not found.");
+// 		}
+// 	}
 
-	// corrected this comment because ai lol
-	/* This code is a simple update script. It will download all packages from the repository and replace the old ones. */
-	if (contextMsg.content.split(" ")[1] == "update") {
-		let finished = false;
-		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
-		let updatedCount = 0;
-		const branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
-		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
-		const githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
-		const start = performance.now();
-		/**
-		 * @type {UpgradedPackage[]}
-		 */
-		const updatesInstalled = [];
-		const downloadsInProgress = [];
-		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-			if (file == "empty.txt") { return; }
-			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-			const makeURL = githubRepoUrl + branchName + "/" + file;
-			const download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
-			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
-			downloadsInProgress.push(download);
-			download.on('end', function (output) {
-				const package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
-				const packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-				if (package.Version != packageOld.Version) {
-					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
-					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
-					contextMsg.channel.send("Replacing finished.");
-					updatesInstalled.push(new UpgradedPackage(packageOld.Version, package.Version, file.replace("-install.js", ""), makeURL));
-					updatedCount += 1;
-					finished = true;
-				}
-				delete require.cache[BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)];
-				delete require.cache[ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file];
-				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
-				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
-			});
-			download.on('error', function (err) {
-				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
-				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
-				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
-			});
-		});
+// 	// corrected this comment because ai lol
+// 	/* This code is a simple update script. It will download all packages from the repository and replace the old ones. */
+// 	if (contextMsg.content.split(" ")[1] == "update") {
+// 		let finished = false;
+// 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+// 		let updatedCount = 0;
+// 		const branchName = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1];
+// 		contextMsg.channel.send("Fetch branch \"" + branchName + "\"...");
+// 		const githubRepoUrl = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[1].split('=')[1];
+// 		const start = performance.now();
+// 		/**
+// 		 * @type {UpgradedPackage[]}
+// 		 */
+// 		const updatesInstalled = [];
+// 		const downloadsInProgress = [];
+// 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+// 			if (file == "empty.txt") { return; }
+// 			console.log(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+// 			const makeURL = githubRepoUrl + branchName + "/" + file;
+// 			const download = wget.download(makeURL, BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+// 			contextMsg.channel.send("Checking " + file.replace("-install.js", "") + "...");
+// 			downloadsInProgress.push(download);
+// 			download.on('end', function (output) {
+// 				const package = requireUncached(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file));
+// 				const packageOld = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+// 				if (package.Version != packageOld.Version) {
+// 					contextMsg.channel.send("Replace \"" + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file) + "\" (Version " + packageOld.Version + ") with version " + package.Version + ".");
+// 					fs.writeFileSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file, fs.readFileSync(BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)));
+// 					contextMsg.channel.send("Replacing finished.");
+// 					updatesInstalled.push(new UpgradedPackage(packageOld.Version, package.Version, file.replace("-install.js", ""), makeURL));
+// 					updatedCount += 1;
+// 					finished = true;
+// 				}
+// 				delete require.cache[BASEDIR + "tmp" + path.sep + "packageCache" + path.sep + path.basename(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file)];
+// 				delete require.cache[ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file];
+// 				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
+// 				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
+// 			});
+// 			download.on('error', function (err) {
+// 				contextMsg.channel.send("No package found with name \"" + path.basename(file) + "\".");
+// 				// delete downloadsInProgress[downloadsInProgress.indexOf(download)];
+// 				downloadsInProgress.splice(downloadsInProgress.indexOf(download), 1);
+// 			});
+// 		});
 
-		const waitForDownloadsInProgressToBeEmpty = (cb, params) => {
-			if (!(downloadsInProgress.length == 0)) {
-				setTimeout(waitForDownloadsInProgressToBeEmpty, 100, cb, params);
-			}
-			else {
-				// CODE GOES IN HERE
-				cb(params);
-			}
-		};
+// 		const waitForDownloadsInProgressToBeEmpty = (cb, params) => {
+// 			if (!(downloadsInProgress.length == 0)) {
+// 				setTimeout(waitForDownloadsInProgressToBeEmpty, 100, cb, params);
+// 			}
+// 			else {
+// 				// CODE GOES IN HERE
+// 				cb(params);
+// 			}
+// 		};
 
-		// waitForConditionToBeTrue(downloadsInProgress, "length", 0, () => {
-		waitForDownloadsInProgressToBeEmpty(() => {
-			if (finished) {
-				client.removeAllListeners("message");
-				register();
-				// console.log("test");
+// 		// waitForConditionToBeTrue(downloadsInProgress, "length", 0, () => {
+// 		waitForDownloadsInProgressToBeEmpty(() => {
+// 			if (finished) {
+// 				client.removeAllListeners("message");
+// 				register();
+// 				// console.log("test");
 
-				fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-					if (file == "empty.txt") { return; }
-					try {
-						const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-						package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-						// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
-						// console.log(typeof package.OnUpdate === 'function');
-						// console.log("test");
-						if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
-							package.OnUpdate(null, contextMsg.channel);
-						}
-					}
-					catch (error) {
-						//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
-						console.log(error);
-					}
-				});
-			}
-			contextMsg.channel.send("Done.").then(v => {
-				const end = performance.now();
-				const time = end - start;
-				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
-			});
-		});
+// 				fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+// 					if (file == "empty.txt") { return; }
+// 					try {
+// 						const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+// 						package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+// 						// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
+// 						// console.log(typeof package.OnUpdate === 'function');
+// 						// console.log("test");
+// 						if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
+// 							package.OnUpdate(null, contextMsg.channel);
+// 						}
+// 					}
+// 					catch (error) {
+// 						//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+// 						console.log(error);
+// 					}
+// 				});
+// 			}
+// 			contextMsg.channel.send("Done.").then(v => {
+// 				const end = performance.now();
+// 				const time = end - start;
+// 				contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+// 				makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
+// 			});
+// 		});
 
-		// setTimeout(function () {
-		// 	if (finished && updatedCount > 0) {
-		// 		// if (finished) {
-		// 		client.removeAllListeners("message");
-		// 		register();
-		// 		// console.log("test");
+// 		// setTimeout(function () {
+// 		// 	if (finished && updatedCount > 0) {
+// 		// 		// if (finished) {
+// 		// 		client.removeAllListeners("message");
+// 		// 		register();
+// 		// 		// console.log("test");
 
-		// 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
-		// 			if (file == "empty.txt") { return; }
-		// 			try {
-		// 				const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
-		// 				package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
-		// 				// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
-		// 				// console.log(typeof package.OnUpdate === 'function');
-		// 				// console.log("test");
-		// 				if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
-		// 					package.OnUpdate(null, contextMsg.channel);
-		// 				}
-		// 			}
-		// 			catch (error) {
-		// 				//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
-		// 				console.log(error);
-		// 			}
-		// 		});
-		// 	}
-		// 	contextMsg.channel.send("Done.").then(v => {
-		// 		const end = performance.now();
-		// 		const time = end - start;
-		// 		contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
-		// 		makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
-		// 	});
-		// }, 2500);
-	}
+// 		// 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
+// 		// 			if (file == "empty.txt") { return; }
+// 		// 			try {
+// 		// 				const package = requireUncached(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun" + path.sep + file);
+// 		// 				package.Init(null, contextMsg.channel, ENV_VAR_BASE_DIR, client.safeClient);
+// 		// 				// console.log(updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")));
+// 		// 				// console.log(typeof package.OnUpdate === 'function');
+// 		// 				// console.log("test");
+// 		// 				if (updatesInstalled.map(function (e) { return e.name; }).indexOf(file.replace("-install.js", "")) != -1 && typeof package.OnUpdate === 'function') {
+// 		// 					package.OnUpdate(null, contextMsg.channel);
+// 		// 				}
+// 		// 			}
+// 		// 			catch (error) {
+// 		// 				//	contextMsg.channel.send("An unexpected error occurred while trying to run package: " + file);
+// 		// 				console.log(error);
+// 		// 			}
+// 		// 		});
+// 		// 	}
+// 		// 	contextMsg.channel.send("Done.").then(v => {
+// 		// 		const end = performance.now();
+// 		// 		const time = end - start;
+// 		// 		contextMsg.channel.send(updatedCount + " package(s) were updated in " + parseInt(time).toFixed() + "ms.");
+// 		// 		makeLogFile(ENV_VAR_APT_LOG_LOCATION + path.sep + "history.log", aptLog("update", start, end, updatesInstalled));
+// 		// 	});
+// 		// }, 2500);
+// 	}
 
-	/* Send message with all packages in the repository. */
-	if (contextMsg.content.split(" ")[1] == "list-all") {
-		contextMsg.channel.send("Collecting data from repository...").then(() => {
-			getAllRepoPackagesRemake().then(v => {
-				// getAllRepoPackages().then(v => {
-				contextMsg.channel.send(v.join("\n"));
-				// contextMsg.channel.send("Done.");
-			});
-		});
-	}
+// 	/* Send message with all packages in the repository. */
+// 	if (contextMsg.content.split(" ")[1] == "list-all") {
+// 		contextMsg.channel.send("Collecting data from repository...").then(() => {
+// 			getAllRepoPackagesRemake().then(v => {
+// 				// getAllRepoPackages().then(v => {
+// 				contextMsg.channel.send(v.join("\n"));
+// 				// contextMsg.channel.send("Done.");
+// 			});
+// 		});
+// 	}
 
-	if (contextMsg.content.split(" ")[1] == "help") {
-		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`\n`what-branch` - `show currently used branch`");
-	}
+// 	if (contextMsg.content.split(" ")[1] == "help") {
+// 		contextMsg.channel.send("`install <package name>` - `install package by name`\n`remove <package name>` - `remove package by name`\n`update` - `replace all outdated packages with newer ones`\n`list-all` - `list all packages in repository.`\n`change-branch <branch name>` - `change branch used in apt update and install`\n`what-branch` - `show currently used branch`");
+// 	}
 
-	if (contextMsg.content.split(" ")[1] == "change-branch" && contextMsg.content.split(" ")[2]) {
-		// console.log(contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, ""))
-		contextMsg.channel.send("Read `/root/.config`...");
-		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
-		const changedBranch = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString();
-		const c2 = changedBranch.split("\n")[2].split('=')[0] + "=" + contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
-		contextMsg.channel.send("Replace lines...");
-		// c2.split('=')[1] = ;
-		// console.log(changedBranch.split("\n"))
-		// console.log(c2);
-		let final = "";
-		for (let index = 0; index < changedBranch.split("\n").length; index++) {
-			// console.log(changedBranch.split("\n")[index])
-			// console.log(index)
+// 	if (contextMsg.content.split(" ")[1] == "change-branch" && contextMsg.content.split(" ")[2]) {
+// 		// console.log(contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, ""))
+// 		contextMsg.channel.send("Read `/root/.config`...");
+// 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+// 		const changedBranch = fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString();
+// 		const c2 = changedBranch.split("\n")[2].split('=')[0] + "=" + contextMsg.content.split(" ")[2].normalize("NFD").replace(/\p{Diacritic}/gu, "");
+// 		contextMsg.channel.send("Replace lines...");
+// 		// c2.split('=')[1] = ;
+// 		// console.log(changedBranch.split("\n"))
+// 		// console.log(c2);
+// 		let final = "";
+// 		for (let index = 0; index < changedBranch.split("\n").length; index++) {
+// 			// console.log(changedBranch.split("\n")[index])
+// 			// console.log(index)
 
-			if (index == 2) {
-				final += c2;
-				continue;
-			}
-			final += changedBranch.split("\n")[index] + "\n";
-		}
-		contextMsg.channel.send("Write to `/root/.config`...");
-		// console.log(final);
-		fs.writeFileSync(BASEDIR + "root" + path.sep + ".config", final);
-		contextMsg.channel.send("Done.");
-		// shellFunctionProcessor({ "content": ENV_VAR_PREFIX + "cat /root/.config", "channel": contextMsg.channel });
-		shellFunctionProcessor(createMessageObjectFromMessageObject(ENV_VAR_PREFIX + "cat /root/.config", contextMsg));
-	}
-	if (contextMsg.content.split(" ")[1] == "what-branch") {
-		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
-		contextMsg.channel.send(fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1]);
-	}
-}
+// 			if (index == 2) {
+// 				final += c2;
+// 				continue;
+// 			}
+// 			final += changedBranch.split("\n")[index] + "\n";
+// 		}
+// 		contextMsg.channel.send("Write to `/root/.config`...");
+// 		// console.log(final);
+// 		fs.writeFileSync(BASEDIR + "root" + path.sep + ".config", final);
+// 		contextMsg.channel.send("Done.");
+// 		// shellFunctionProcessor({ "content": ENV_VAR_PREFIX + "cat /root/.config", "channel": contextMsg.channel });
+// 		shellFunctionProcessor(createMessageObjectFromMessageObject(ENV_VAR_PREFIX + "cat /root/.config", contextMsg));
+// 	}
+// 	if (contextMsg.content.split(" ")[1] == "what-branch") {
+// 		const BASEDIR = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep;
+// 		contextMsg.channel.send(fs.readFileSync(BASEDIR + "root" + path.sep + ".config").toString().split("\n")[2].split('=')[1]);
+// 	}
+// }
 
 // function waitForConditionToBeTrue(objectToTest, property, target, cb, params) {
 // 	const currentState = objectToTest[property];
@@ -802,65 +802,65 @@ function aptCommand(contextMsg) {
 // 	}
 // }
 
-/**
- *
- * @param {*} action
- * @param {*} starttime
- * @param {*} endtime
- * @param {UpgradedPackage[]} packagesAffected
- * @returns
- */
-function aptLog(action, starttime, endtime, packagesAffected) {
-	const final = [];
-	const d = new Date(performance.timeOrigin + starttime);
-	const d2 = new Date(performance.timeOrigin + endtime);
-	final[0] = "\nStart-Date: " + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "  " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
-	final[1] = "Commandline: " + "apt " + action;
+// /**
+//  *
+//  * @param {*} action
+//  * @param {*} starttime
+//  * @param {*} endtime
+//  * @param {UpgradedPackage[]} packagesAffected
+//  * @returns
+//  */
+// function aptLog(action, starttime, endtime, packagesAffected) {
+// 	const final = [];
+// 	const d = new Date(performance.timeOrigin + starttime);
+// 	const d2 = new Date(performance.timeOrigin + endtime);
+// 	final[0] = "\nStart-Date: " + d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate() + "  " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds();
+// 	final[1] = "Commandline: " + "apt " + action;
 
-	switch (action) {
-		case "update":
-			{
-				const upgradeText = [];
-				for (let i = 0; i < packagesAffected.length; i++) {
-					const element = packagesAffected[i];
-					upgradeText.push(element.name + "(" + element.oldVersion + ", " + element.newVersion + ")");
-				}
-				final[2] = "Upgrade: " + upgradeText.join(", ");
-			}
-			break;
+// 	switch (action) {
+// 		case "update":
+// 			{
+// 				const upgradeText = [];
+// 				for (let i = 0; i < packagesAffected.length; i++) {
+// 					const element = packagesAffected[i];
+// 					upgradeText.push(element.name + "(" + element.oldVersion + ", " + element.newVersion + ")");
+// 				}
+// 				final[2] = "Upgrade: " + upgradeText.join(", ");
+// 			}
+// 			break;
 
-		case "install":
-			{
-				const installText = [];
-				for (let i = 0; i < packagesAffected.length; i++) {
-					const element = packagesAffected[i];
-					installText.push(element.name + "(" + element.newVersion + ")");
-				}
-				final[2] = "Install: " + installText.join(", ");
-			}
-			break;
-		case "remove":
-			{
-				const removeText = [];
-				for (let i = 0; i < packagesAffected.length; i++) {
-					const element = packagesAffected[i];
-					removeText.push(element.name + "(" + element.newVersion + ")");
-				}
-				final[2] = "Remove: " + removeText.join(", ");
-			}
-			break;
-		default:
-			break;
-	}
-	final[3] = "End-Date: " + d2.getFullYear() + "-" + d2.getMonth() + "-" + d2.getDate() + "  " + d2.getHours() + ":" + d2.getMinutes() + ":" + d2.getSeconds();
-	return final.join("\n");
-}
+// 		case "install":
+// 			{
+// 				const installText = [];
+// 				for (let i = 0; i < packagesAffected.length; i++) {
+// 					const element = packagesAffected[i];
+// 					installText.push(element.name + "(" + element.newVersion + ")");
+// 				}
+// 				final[2] = "Install: " + installText.join(", ");
+// 			}
+// 			break;
+// 		case "remove":
+// 			{
+// 				const removeText = [];
+// 				for (let i = 0; i < packagesAffected.length; i++) {
+// 					const element = packagesAffected[i];
+// 					removeText.push(element.name + "(" + element.newVersion + ")");
+// 				}
+// 				final[2] = "Remove: " + removeText.join(", ");
+// 			}
+// 			break;
+// 		default:
+// 			break;
+// 	}
+// 	final[3] = "End-Date: " + d2.getFullYear() + "-" + d2.getMonth() + "-" + d2.getDate() + "  " + d2.getHours() + ":" + d2.getMinutes() + ":" + d2.getSeconds();
+// 	return final.join("\n");
+// }
 
-function makeLogFile(filename, data) {
-	if (!fs.existsSync(path.dirname(filename)))
-		fs.mkdirSync(path.dirname(filename), { recursive: true });
-	fs.appendFileSync(filename, "\n" + data);
-}
+// function makeLogFile(filename, data) {
+// 	if (!fs.existsSync(path.dirname(filename)))
+// 		fs.mkdirSync(path.dirname(filename), { recursive: true });
+// 	fs.appendFileSync(filename, "\n" + data);
+// }
 
 /**
  * *This function deletes the cached version of the module and then returns the module.
@@ -872,250 +872,250 @@ function requireUncached(module) {
 	return require(module);
 }
 
-/**
- * It lists the files in the current directory.
- * @param contextMsg - The message that triggered the command.
- */
-function lsCommand(contextMsg, variableList) {
-	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
-	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+// /**
+//  * It lists the files in the current directory.
+//  * @param contextMsg - The message that triggered the command.
+//  */
+// function lsCommand(contextMsg, variableList) {
+// 	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+// 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 
-	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+// 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == ENV_VAR_PREFIX + "ls")
-		pathCorrected = ".";
+// 	if (pathCorrected == ENV_VAR_PREFIX + "ls")
+// 		pathCorrected = ".";
 
-	// console.log(pathCorrected);
+// 	// console.log(pathCorrected);
 
-	const localVarList = { ...ENV_VAR_LIST, ...variableList };
+// 	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	for (let i = 0; i < Object.keys(localVarList).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
-	}
+// 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+// 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+// 	}
 
-	if (pathCorrected.startsWith("/")) {
-		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
-	}
-	if (fs.existsSync(pathCorrected)) {
-		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
-			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
-			contextMsg.channel.send("Error: cannot access this path.");
-		}
-		else {
-			fs.readdir(pathCorrected, (err, files) => {
-				if (!files.length) {
-					contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
-				}
-				else {
-					contextMsg.channel.send(files.join(', '));
-				}
-			});
-		}
-	}
-	else {
-		contextMsg.channel.send("Error: directory doesn't exist.");
-	}
-}
+// 	if (pathCorrected.startsWith("/")) {
+// 		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+// 	}
+// 	if (fs.existsSync(pathCorrected)) {
+// 		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
+// 			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
+// 			contextMsg.channel.send("Error: cannot access this path.");
+// 		}
+// 		else {
+// 			fs.readdir(pathCorrected, (err, files) => {
+// 				if (!files.length) {
+// 					contextMsg.channel.send("`" + pathWithoutDrive + "` is empty.");
+// 				}
+// 				else {
+// 					contextMsg.channel.send(files.join(', '));
+// 				}
+// 			});
+// 		}
+// 	}
+// 	else {
+// 		contextMsg.channel.send("Error: directory doesn't exist.");
+// 	}
+// }
 
-function treeCommand(contextMsg, variableList) {
-	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
-	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+// function treeCommand(contextMsg, variableList) {
+// 	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
+// 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
 
-	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
+// 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	if (pathCorrected == ENV_VAR_PREFIX + "tree")
-		pathCorrected = process.cwd();
+// 	if (pathCorrected == ENV_VAR_PREFIX + "tree")
+// 		pathCorrected = process.cwd();
 
-	// console.log(pathCorrected);
+// 	// console.log(pathCorrected);
 
-	const localVarList = { ...ENV_VAR_LIST, ...variableList };
+// 	const localVarList = { ...ENV_VAR_LIST, ...variableList };
 
-	for (let i = 0; i < Object.keys(localVarList).length; i++) {
-		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
-	}
+// 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+// 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+// 	}
 
-	if (pathCorrected.startsWith("/")) {
-		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
-	}
-	if (fs.existsSync(pathCorrected)) {
-		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
-			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
-			contextMsg.channel.send("Error: cannot access this path.");
-		}
-		else {
-			// console.log((new Array(level + 1)).join(" "))
+// 	if (pathCorrected.startsWith("/")) {
+// 		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+// 	}
+// 	if (fs.existsSync(pathCorrected)) {
+// 		if (!path.resolve(pathCorrected).includes("VirtualDrive")) {
+// 			// if (!path.resolve(pathCorrected).includes("VirtualDrive") || pathCorrected.includes("VirtualDrive") || ENV_VAR_DISABLED_FOLDERS.includes((path.basename(path.resolve(pathCorrected))))) {
+// 			contextMsg.channel.send("Error: cannot access this path.");
+// 		}
+// 		else {
+// 			// console.log((new Array(level + 1)).join(" "))
 
-			// console.log(getDirectoriesInDirectories(pathCorrected));
+// 			// console.log(getDirectoriesInDirectories(pathCorrected));
 
-			const str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + getAllDirectories(pathCorrected).length + " directories, " + getAllFiles(pathCorrected).length + ' files';
-			// var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[1].length + " directories, " + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[0].length + ' files';
-			for (let i = 0; i < str.length; i += 1800) {
-				const toSend = str.substring(i, Math.min(str.length, i + 1800));
-				contextMsg.channel.send("```\n" + toSend + "\n```");
-			}
-			// contextMsg.channel.send("```\n" +  + "\n```", { split: true });
-		}
-	}
-	else {
-		contextMsg.channel.send("Error: directory doesn't exist.");
-	}
-}
+// 			const str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + getAllDirectories(pathCorrected).length + " directories, " + getAllFiles(pathCorrected).length + ' files';
+// 			// var str = readTree(buildTree(replaceAll(pathCorrected, "\\", "/")), 0) + '\n' + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[1].length + " directories, " + DirectoryTools.ThroughDirectory(pathCorrected, [], [])[0].length + ' files';
+// 			for (let i = 0; i < str.length; i += 1800) {
+// 				const toSend = str.substring(i, Math.min(str.length, i + 1800));
+// 				contextMsg.channel.send("```\n" + toSend + "\n```");
+// 			}
+// 			// contextMsg.channel.send("```\n" +  + "\n```", { split: true });
+// 		}
+// 	}
+// 	else {
+// 		contextMsg.channel.send("Error: directory doesn't exist.");
+// 	}
+// }
 
-const getDirectories = source =>
-	fs.readdirSync(source, { withFileTypes: true })
-		.filter(dirent => dirent.isDirectory())
-		.map(dirent => dirent.name);
+// const getDirectories = source =>
+// 	fs.readdirSync(source, { withFileTypes: true })
+// 		.filter(dirent => dirent.isDirectory())
+// 		.map(dirent => dirent.name);
 
-function getDirectoriesInDirectories(source) {
-	const directories = [];
-	getDirectories(source).forEach(function (dir) {
-		directories.push(path.join(source, dir));
-		const subdirectories = getDirectoriesInDirectories(path.join(source, dir));
-		if (subdirectories.length > 0) {
-			directories.push(subdirectories);
-		}
+// function getDirectoriesInDirectories(source) {
+// 	const directories = [];
+// 	getDirectories(source).forEach(function (dir) {
+// 		directories.push(path.join(source, dir));
+// 		const subdirectories = getDirectoriesInDirectories(path.join(source, dir));
+// 		if (subdirectories.length > 0) {
+// 			directories.push(subdirectories);
+// 		}
 
-		// directories.push(getDirectoriesInDirectories(source + path.sep + dir));
-	});
-	return directories;
-}
+// 		// directories.push(getDirectoriesInDirectories(source + path.sep + dir));
+// 	});
+// 	return directories;
+// }
 
-function flatten(items) {
-	const flat = [];
+// function flatten(items) {
+// 	const flat = [];
 
-	items.forEach(item => {
-		if (Array.isArray(item)) {
-			flat.push(...flatten(item));
-		}
-		else {
-			flat.push(item);
-		}
-	});
+// 	items.forEach(item => {
+// 		if (Array.isArray(item)) {
+// 			flat.push(...flatten(item));
+// 		}
+// 		else {
+// 			flat.push(item);
+// 		}
+// 	});
 
-	return flat;
-}
+// 	return flat;
+// }
 
-function getAllDirectories(source) {
-	return flatten(getDirectoriesInDirectories(source));
-}
+// function getAllDirectories(source) {
+// 	return flatten(getDirectoriesInDirectories(source));
+// }
 
-function readTree(tree, level) {
-	let final = "";
-	// console.log(tree.children);
-	// console.log(tree.path);
-	// console.log(tree.path.split("/").length)
-	if (tree.path.split("/").length == 1 || tree.path.split("/")[tree.path.split("/").length - 1] == "")
-		final += (new Array(level)).join("─") + "/:" + "\n";
-	else if (tree.path)
-		final += (new Array(level + 1)).join(" ") + "└─" + (new Array(level + 1)).join("─") + tree.path.split("/")[tree.path.split("/").length - 1] + "\n";
-	if (tree.children)
-		for (let index = 0; index < tree.children.length; index++) {
-			const element = tree.children[index];
-			// console.log(element.path.split("/")[element.path.split("/").length - 1])
-			// final += (new Array(level + 1)).join("-") + element.path.split("/")[element.path.split("/").length - 1]
-			if (element.children) {
-				// final +=  readTree(element.children, level + 1) + "\n";
-				// console.log(element.children)
-				if (!element.children)
-					final += readTree(element, level + 1) + "\n";
-				else
-					final += readTree(element, level + 1);
-			}
-		}
-	return final;
-}
+// function readTree(tree, level) {
+// 	let final = "";
+// 	// console.log(tree.children);
+// 	// console.log(tree.path);
+// 	// console.log(tree.path.split("/").length)
+// 	if (tree.path.split("/").length == 1 || tree.path.split("/")[tree.path.split("/").length - 1] == "")
+// 		final += (new Array(level)).join("─") + "/:" + "\n";
+// 	else if (tree.path)
+// 		final += (new Array(level + 1)).join(" ") + "└─" + (new Array(level + 1)).join("─") + tree.path.split("/")[tree.path.split("/").length - 1] + "\n";
+// 	if (tree.children)
+// 		for (let index = 0; index < tree.children.length; index++) {
+// 			const element = tree.children[index];
+// 			// console.log(element.path.split("/")[element.path.split("/").length - 1])
+// 			// final += (new Array(level + 1)).join("-") + element.path.split("/")[element.path.split("/").length - 1]
+// 			if (element.children) {
+// 				// final +=  readTree(element.children, level + 1) + "\n";
+// 				// console.log(element.children)
+// 				if (!element.children)
+// 					final += readTree(element, level + 1) + "\n";
+// 				else
+// 					final += readTree(element, level + 1);
+// 			}
+// 		}
+// 	return final;
+// }
 
-/**
- * It returns the current working directory.
- * @param contextMsg - The message that triggered the command.
- */
-function pwdCommand(contextMsg) {
-	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
-	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
-	if (pathWithoutDrive == "") {
-		pathWithoutDrive = "/";
-	}
-	// console.log(pathWithoutDrive)
-	contextMsg.channel.send(pathWithoutDrive);
-}
+// /**
+//  * It returns the current working directory.
+//  * @param contextMsg - The message that triggered the command.
+//  */
+// function pwdCommand(contextMsg) {
+// 	let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive', '');
+// 	pathWithoutDrive = replaceAll(pathWithoutDrive, "\\", "/");
+// 	if (pathWithoutDrive == "") {
+// 		pathWithoutDrive = "/";
+// 	}
+// 	// console.log(pathWithoutDrive)
+// 	contextMsg.channel.send(pathWithoutDrive);
+// }
 
-/**
- * Change the current working directory to the given path
- * @param contextMsg - The message that triggered the command.
- */
-function cdCommand(contextMsg, variableList) {
-	// if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("~")) {
-	// 	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
-	// 		const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
-	// 		if (stat.isFile() != true) {
-	// 			process.chdir(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
-	// 		}
-	// 		else {
-	// 			contextMsg.channel.send("Error: given path is not an directory.");
-	// 		}
-	// 	}
-	// }
-	// else {
-
-
-	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
-
-	if (pathCorrected == ENV_VAR_PREFIX + "cd") { return; }
-
-	//	console.log("test")
-
-	//	console.log(pathCorrected);
+// /**
+//  * Change the current working directory to the given path
+//  * @param contextMsg - The message that triggered the command.
+//  */
+// function cdCommand(contextMsg, variableList) {
+// 	// if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("$") || contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("~")) {
+// 	// 	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).toString().replace("$", "") in ENV_VAR_LIST) {
+// 	// 		const stat = fs.lstatSync(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+// 	// 		if (stat.isFile() != true) {
+// 	// 			process.chdir(ENV_VAR_LIST[contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).replace("$", "")]);
+// 	// 		}
+// 	// 		else {
+// 	// 			contextMsg.channel.send("Error: given path is not an directory.");
+// 	// 		}
+// 	// 	}
+// 	// }
+// 	// else {
 
 
-	//	console.log(pathCorrected);
+// 	let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
-	const localVarList = { ...ENV_VAR_LIST, ...variableList };
+// 	if (pathCorrected == ENV_VAR_PREFIX + "cd") { return; }
 
-	for (let i = 0; i < Object.keys(localVarList).length; i++) {
-		//	console.log(i);
-		//	console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
-		//	console.log(Object.keys(ENV_VAR_LIST)[i]);
+// 	//	console.log("test")
 
-		// it doesn't look good
-		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
-	}
-	//	console.log(pathCorrected);
+// 	//	console.log(pathCorrected);
 
-	if (pathCorrected.startsWith("/")) {
-		//	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("/")) {
-		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
-	}
-	//	console.log(pathCorrected);
 
-	if (fs.existsSync(pathCorrected)) {
-		if (path.resolve(pathCorrected).includes("VirtualDrive") && !path.resolve(pathCorrected).includes(ENV_VAR_APT_PROTECTED_DIR)) {
-			const stat = fs.lstatSync(pathCorrected);
-			if (stat.isFile() != true) {
-				client.safeClient.listEnv["$OLDPWD"] = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
-				process.chdir(pathCorrected);
-				const pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
-				client.safeClient.listEnv["$PWD"] = pwd;
-				// console.log(pwd.length);
-				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
-				// console.log(pwd.split("/")[pwd.split("/").length - 1])
-				if ((ENV_VAR_STARTUP_NICKNAME.length + pwd.length) < 31)
-					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd + "]");
-				else
-					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd.split("/")[pwd.split("/").length - 1] + "]");
-			}
-			else {
-				contextMsg.channel.send("Error: given path is not an directory.");
-			}
-		}
-		else {
-			contextMsg.channel.send("Error: cannot `cd` into this directory.");
-		}
-	}
-	else {
-		contextMsg.channel.send("Error: directory doesn't exist.");
-	}
-	//	}
-}
+// 	//	console.log(pathCorrected);
+
+// 	const localVarList = { ...ENV_VAR_LIST, ...variableList };
+
+// 	for (let i = 0; i < Object.keys(localVarList).length; i++) {
+// 		//	console.log(i);
+// 		//	console.log(ENV_VAR_LIST[Object.keys(ENV_VAR_LIST)[i]]);
+// 		//	console.log(Object.keys(ENV_VAR_LIST)[i]);
+
+// 		// it doesn't look good
+// 		pathCorrected = replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
+// 	}
+// 	//	console.log(pathCorrected);
+
+// 	if (pathCorrected.startsWith("/")) {
+// 		//	if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1).startsWith("/")) {
+// 		pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
+// 	}
+// 	//	console.log(pathCorrected);
+
+// 	if (fs.existsSync(pathCorrected)) {
+// 		if (path.resolve(pathCorrected).includes("VirtualDrive") && !path.resolve(pathCorrected).includes(ENV_VAR_APT_PROTECTED_DIR)) {
+// 			const stat = fs.lstatSync(pathCorrected);
+// 			if (stat.isFile() != true) {
+// 				client.safeClient.listEnv["$OLDPWD"] = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
+// 				process.chdir(pathCorrected);
+// 				const pwd = runAndGetOutput(ENV_VAR_PREFIX + "pwd", localVarList);
+// 				client.safeClient.listEnv["$PWD"] = pwd;
+// 				// console.log(pwd.length);
+// 				// console.log(len(ENV_VAR_STARTUP_NICKNAME+ pwd));
+// 				// console.log(pwd.split("/")[pwd.split("/").length - 1])
+// 				if ((ENV_VAR_STARTUP_NICKNAME.length + pwd.length) < 31)
+// 					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd + "]");
+// 				else
+// 					contextMsg.guild.me.setNickname(ENV_VAR_STARTUP_NICKNAME + " [" + pwd.split("/")[pwd.split("/").length - 1] + "]");
+// 			}
+// 			else {
+// 				contextMsg.channel.send("Error: given path is not an directory.");
+// 			}
+// 		}
+// 		else {
+// 			contextMsg.channel.send("Error: cannot `cd` into this directory.");
+// 		}
+// 	}
+// 	else {
+// 		contextMsg.channel.send("Error: directory doesn't exist.");
+// 	}
+// 	//	}
+// }
 
 function escapeRegExp(string) {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -2478,37 +2478,37 @@ function parseMath(input, variableList) {
 }
 
 // tree command
-class TreeNode {
-	constructor(mainPath) {
-		this.path = mainPath;
-		this.children = [];
-	}
-}
+// class TreeNode {
+// 	constructor(mainPath) {
+// 		this.path = mainPath;
+// 		this.children = [];
+// 	}
+// }
 
-function buildTree(pathToRoot) {
-	const root = new TreeNode(pathToRoot);
+// function buildTree(pathToRoot) {
+// 	const root = new TreeNode(pathToRoot);
 
-	const stack = [root];
+// 	const stack = [root];
 
-	while (stack.length) {
-		const currentNode = stack.pop();
+// 	while (stack.length) {
+// 		const currentNode = stack.pop();
 
-		if (currentNode) {
-			const children = fs.readdirSync(currentNode.path);
+// 		if (currentNode) {
+// 			const children = fs.readdirSync(currentNode.path);
 
-			for (const child of children) {
-				const childPath = `${currentNode.path}/${child}`;
-				const childNode = new TreeNode(childPath);
-				currentNode.children.push(childNode);
+// 			for (const child of children) {
+// 				const childPath = `${currentNode.path}/${child}`;
+// 				const childNode = new TreeNode(childPath);
+// 				currentNode.children.push(childNode);
 
-				if (fs.statSync(childNode.path).isDirectory()) {
-					stack.push(childNode);
-				}
-			}
-		}
-	}
-	return root;
-}
+// 				if (fs.statSync(childNode.path).isDirectory()) {
+// 					stack.push(childNode);
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return root;
+// }
 
 // for ifs
 class IFStatement {
@@ -2520,14 +2520,14 @@ class IFStatement {
 }
 
 // apt upgrade
-class UpgradedPackage {
-	constructor(oldVersion, newVersion, name, packageUrl) {
-		this.oldVersion = oldVersion;
-		this.newVersion = newVersion;
-		this.name = name;
-		this.url = packageUrl;
-	}
-}
+// class UpgradedPackage {
+// 	constructor(oldVersion, newVersion, name, packageUrl) {
+// 		this.oldVersion = oldVersion;
+// 		this.newVersion = newVersion;
+// 		this.name = name;
+// 		this.url = packageUrl;
+// 	}
+// }
 
 const getFileStructure = () => {
 	return ["bin", "etc", "home", "root", "tmp", "usr", "dir.cfg", "root/.config", "tmp/packageCache", "bin/autorun"];
