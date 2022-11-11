@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 239;
+const VERSION = 240;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -407,7 +407,7 @@ function startBootSeq(message) {
 	checkTimer = setInterval(() => {
 		if (message.channel == null)
 			return;
-		message.channel.send("WARNING RUNNING REWRITE EDITION!!! IT'S BROKEN NOW");
+		// message.channel.send("WARNING RUNNING REWRITE EDITION!!! IT'S BROKEN NOW");
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
 		if (VERSION < ENV_VAR_VERSION) {
 			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
