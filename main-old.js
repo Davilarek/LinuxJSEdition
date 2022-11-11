@@ -161,9 +161,9 @@ const ENV_VAR_UNAME_STRING = {
 };
 let ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
-getVersionRemake().then(v => {
-	ENV_VAR_VERSION = v;
-});
+// getVersionRemake().then(v => {
+// 	ENV_VAR_VERSION = v;
+// });
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag);
@@ -455,9 +455,9 @@ function startBootSeq(message) {
 			return;
 
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
-		if (VERSION < ENV_VAR_VERSION) {
-			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
-		}
+		// if (VERSION < ENV_VAR_VERSION) {
+		// 	message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
+		// }
 
 		fs.readdirSync(ENV_VAR_APT_PROTECTED_DIR + path.sep + "autorun").forEach(file => {
 			if (file == "empty.txt") { return; }
