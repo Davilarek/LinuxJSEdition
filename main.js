@@ -2118,6 +2118,18 @@ function recreateMessageObject(original) {
 					// });
 				});
 			},
+			"awaitMessages": (filter, settings) => {
+				return new Promise((resolve, reject) => {
+					original.channel.awaitMessages(filter, settings).then((msg) => {
+						resolve({ "first": () => { return recreateMessageObject(msg.first()); } });
+					}, (errorData) => {
+						reject(errorData);
+					});
+					// .catch((errorData) => {
+					// 	reject(errorData);
+					// });
+				});
+			},
 		},
 		"guild": {
 			"me": {
@@ -2127,6 +2139,9 @@ function recreateMessageObject(original) {
 					original.guild.me.setNickname(data);
 				},
 			},
+		},
+		"author": {
+			"id": original.author != undefined ? original.author.id : 0,
 		},
 	};
 }
