@@ -159,7 +159,7 @@ const ENV_VAR_UNAME_STRING = {
 	HARDWARE_PLATFORM: "unknown",
 	PLATFORM: "LinuxJSEdition",
 };
-let ENV_VAR_VERSION = 0;
+const ENV_VAR_VERSION = 0;
 let ENV_VAR_STARTUP_NICKNAME;
 // getVersionRemake().then(v => {
 // 	ENV_VAR_VERSION = v;
