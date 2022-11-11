@@ -7,8 +7,11 @@ exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_APT_PROTECTED_DIR = cli.aptProtectedDir;
     const ENV_VAR_BASE_DIR = basePath;
     const ENV_VAR_APT_LOG_LOCATION = ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "var" + path.sep + "log" + path.sep + "apt";
-    cli.registerCommand("apt", (contextMsg) => {
+    cli.registerCommand("apt", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             const wget = require(basePath + "/wget-fromscratch.js");
             /* This code is responsible for installing a package. */
             if (contextMsg.content.split(" ")[1] == "install") {

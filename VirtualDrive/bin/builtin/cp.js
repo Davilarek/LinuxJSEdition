@@ -4,8 +4,11 @@ const path = require("path");
 exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_LIST = cli.listEnv;
     const ENV_VAR_BASE_DIR = basePath;
-    cli.registerCommand("cp", (contextMsg, variableList) => {
+    cli.registerCommand("cp", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             let pathCorrected = contextMsg.content.split(" ")[1];
             let pathCorrected2 = contextMsg.content.split(" ")[2];
 

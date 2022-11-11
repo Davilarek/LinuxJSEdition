@@ -6,8 +6,11 @@ exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_PREFIX = cli.prefix;
     const ENV_VAR_BASE_DIR = basePath;
     const ENV_VAR_DISABLED_FOLDERS = fs.readFileSync(ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep + "dir.cfg").toString().split("\n");
-    cli.registerCommand("rmdir", (contextMsg, variableList) => {
+    cli.registerCommand("rmdir", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
             const localVarList = { ...ENV_VAR_LIST, ...variableList };

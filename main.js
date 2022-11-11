@@ -272,6 +272,12 @@ client.registerCommand = (name, func, description) => {
 	console.log("Registered command: " + name);
 };
 
+/**
+ * @type {Object<string, LJSProcess>}
+ */
+const currentlyRunningProcesses = {
+};
+
 client.safeClient = {
 	"cmdList": client.cmdList,
 	"enableStdin": client.enableStdin,
@@ -1997,6 +2003,18 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 	// 	whoamiCommand(messageObject);
 	// 	return;
 	// }
+
+	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "kill")) {
+		console.log("killing process");
+		for (const prop in currentlyRunningProcesses) {
+			console.log(prop);
+			if (currentlyRunningProcesses[prop].pid == messageObject.content.split(" ")[1]) {
+				currentlyRunningProcesses[prop].kill(false);
+			}
+		}
+		return;
+	}
+
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX + "sh")) {
 		if (messageObject.content.split(" ")[1] == "" || !messageObject.content.split(" ")[1]) {
 			messageObject.channel.send("Error: filename required"); return;
@@ -2043,7 +2061,11 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				try {
 					// removeClientFromMessageObject(messageObject);
-					let output = externalCommandList[element](recreateMessageObject(messageObject), variableList);
+					const abortController = new AbortController();
+					let output = externalCommandList[element](recreateMessageObject(messageObject), variableList, abortController);
+					currentlyRunningProcesses[Date.now()] = new LJSProcess("", Date.now(), "root", abortController);
+					console.log("Creating process with pid: " + Date.now());
+
 					if (output == undefined)
 						output = {
 							"then": () => {
@@ -2070,7 +2092,10 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 			if (element == messageObject.content.split(" ")[0]) {
 				// console.log(messageObject.content.substring(messageObject.content.indexOf(" ") + 1))
 				// try {
-				const output = builtinCommandList[element](recreateMessageObject(messageObject), variableList);
+				const abortController = new AbortController();
+				const output = builtinCommandList[element](recreateMessageObject(messageObject), variableList, abortController);
+				currentlyRunningProcesses[Date.now()] = new LJSProcess("", Date.now(), "root", abortController);
+				console.log("Creating process with pid: " + Date.now());
 				// console.log(output);
 				if (redirectReturn) {
 					return output;
@@ -2144,6 +2169,20 @@ function recreateMessageObject(original) {
 			"id": original.author != undefined ? original.author.id : 0,
 		},
 	};
+}
+
+class LJSProcess {
+	constructor(cacheName, id, user, abortController) {
+		this.isAlive = true;
+		this.filename = cacheName;
+		this.pid = id;
+		this.user = user;
+		this.abortController = abortController;
+	}
+	kill() {
+		// console.log(this.promise.toString());
+		this.abortController.abort();
+	}
 }
 
 function removeClientFromMessageObject(obj) {

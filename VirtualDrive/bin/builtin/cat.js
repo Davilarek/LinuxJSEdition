@@ -5,8 +5,11 @@ exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_LIST = cli.listEnv;
     const ENV_VAR_PREFIX = cli.prefix;
     const ENV_VAR_BASE_DIR = basePath;
-    cli.registerCommand("cat", (contextMsg, variableList) => {
+    cli.registerCommand("cat", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             let pathCorrected = contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1);
 
             const localVarList = { ...ENV_VAR_LIST, ...variableList };

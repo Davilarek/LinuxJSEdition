@@ -5,8 +5,11 @@ exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_PREFIX = cli.prefix;
     const wget = require(basePath + "/wget-fromscratch.js");
 
-    cli.registerCommand("wget", (contextMsg) => {
+    cli.registerCommand("wget", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             if (contextMsg.content.substring(contextMsg.content.indexOf(" ") + 1) == ENV_VAR_PREFIX + "wget") {
                 contextMsg.channel.send("Error: link not specified.");
                 resolve(1);

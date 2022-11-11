@@ -5,8 +5,11 @@ exports.Init = function (args, chan, basePath, cli) {
     const ENV_VAR_LIST = cli.listEnv;
     const ENV_VAR_PREFIX = cli.prefix;
     const ENV_VAR_BASE_DIR = basePath;
-    cli.registerCommand("tree", (contextMsg, variableList) => {
+    cli.registerCommand("tree", (contextMsg, variableList, abort) => {
         return new Promise((resolve) => {
+            abort.signal.addEventListener('abort', () => {
+                resolve(137);
+            });
             // let pathWithoutDrive = process.cwd().replace(ENV_VAR_BASE_DIR + path.sep + 'VirtualDrive' + path.sep, '');
             // pathWithoutDrive = cli.coolTools.replaceAll(pathWithoutDrive, "\\", "/");
 
