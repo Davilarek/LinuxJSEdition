@@ -1,6 +1,21 @@
 /* eslint-disable no-unused-vars */
-let mainFile = require("./main.js");
+let filenameToLoad = "./main.js";
+const readline = require("readline");
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+});
 
+rl.question("Rewrite version has been released and replaced original main.js file. It may be unstable now. Do you want to load older version? (Y/n)", function (answer) {
+    if (answer.toLowerCase() == "y") {
+        filenameToLoad = "./main-old.js";
+        mainFile = require(filenameToLoad);
+    }
+    else
+        mainFile = require(filenameToLoad);
+    rl.close();
+});
+let mainFile = null;
 const fs = require("fs");
 const http = require("https");
 
@@ -49,8 +64,10 @@ module.exports.Upgrade = function () {
 
 /* A way to reload the main.js file. */
 module.exports.Reboot = function (msg) {
-    delete require.cache[require.resolve("./main.js")];
-    mainFile = require("./main.js");
+    // delete require.cache[require.resolve("./main.js")];
+    // mainFile = require("./main.js");
+    delete require.cache[require.resolve(filenameToLoad)];
+    mainFile = require(filenameToLoad);
     // console.log(msg);
     if (msg != undefined) {
         setTimeout(() => {
