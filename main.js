@@ -2101,7 +2101,16 @@ function recreateMessageObject(original) {
 				// console.log(data);
 				// client.channels.fetch(original.channel.id)
 				// 	.then(channel => channel.send(data));
-				original.channel.send(data);
+				return new Promise((resolve, reject) => {
+					original.channel.send(data).then((msg) => {
+						resolve(recreateMessageObject(msg));
+					}, (errorData) => {
+						reject(errorData);
+					});
+					// .catch((errorData) => {
+					// 	reject(errorData);
+					// });
+				});
 			},
 		},
 		"guild": {
