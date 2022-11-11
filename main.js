@@ -224,8 +224,12 @@ built-in commands
 client.cmdList = {
 	"cmdlist": `displays list of available commands and description`,
 	"cmdinfo": `shows description of provided command (use without global prefix "` + ENV_VAR_PREFIX + `")`,
+	"apropos": `shows list of commands that has specified keywords in their description`,
 	"upgrade-os": `upgrade everything and re-download the os`,
 	"reboot": `reboots os`,
+	"sh": `runs a file executing every line with command from this list.`,
+	"ish": `runs provided command list executing every line with command from this list.`,
+	"js": `execute js file from bin directory`,
 };
 
 client.enableStdin = true;
