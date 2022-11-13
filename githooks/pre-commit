@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+
+linecontent=$(grep -n 'const VERSION =' main.js)
+IFS="=" read -r unused versionnum <<< $linecontent
+version=$(echo $versionnum | cut -d';' -f1)
+linenumber=$(echo $unused | cut -d':' -f1)
+versioncorrect=$(($version + 1))
+sed -i "${linenumber}cconst VERSION = ${versioncorrect};" main.js
