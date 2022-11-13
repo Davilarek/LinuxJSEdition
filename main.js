@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 255;
+const VERSION = 256;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -169,6 +169,12 @@ let ENV_VAR_STARTUP_NICKNAME;
 getVersionRemake().then(v => {
 	ENV_VAR_VERSION = v;
 });
+
+// const terminals = [];
+
+// class LJSTerminal {
+// 	send
+// }
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag);
@@ -1736,6 +1742,7 @@ function closeMain() {
 			// then check if module exports has a OnClose function
 			if (require.cache[f]) {
 				if (require.cache[f].exports.OnClose != null) {
+					console.log("Closing " + f);
 					require.cache[f].exports.OnClose();
 				}
 			}
@@ -1843,7 +1850,8 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		client.commandHistory[0] = messageObject.content;
 	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && (messageObject.content.split(" ")[0] in externalCommandList || messageObject.content.split(" ")[0] in builtinCommandList)) {
-		client.inputEmitter.emit("message", messageObject.content);
+		if (messageObject.author.id != 0)
+			client.inputEmitter.emit("message", messageObject.content);
 	}
 	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
 	// 	aptCommand(messageObject, variableList);
