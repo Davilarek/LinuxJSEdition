@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 256;
+const VERSION = 258;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -1850,7 +1850,7 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		client.commandHistory[0] = messageObject.content;
 	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && (messageObject.content.split(" ")[0] in externalCommandList || messageObject.content.split(" ")[0] in builtinCommandList)) {
-		if (messageObject.author.id != 0)
+		if (messageObject.author && messageObject.author.id != 0)
 			client.inputEmitter.emit("message", messageObject.content);
 	}
 	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
