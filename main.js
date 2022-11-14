@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 260;
+const VERSION = 261;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -1925,12 +1925,13 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		variableList = {};
 
 	// if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.substring(messageObject.content.indexOf(" ") + 1) in client.cmdList) {
-	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.split(" ")[0].split(ENV_VAR_PREFIX)[1] in client.cmdList) {
-		variableList["$RANDOM"] = getRandomInt(32768);
-		client.commandHistory.push({ ...client.commandHistory[0] });
-		client.commandHistory[0] = messageObject.content;
-	}
+	// if (messageObject.content.startsWith(ENV_VAR_PREFIX) && messageObject.content.split(" ")[0].split(ENV_VAR_PREFIX)[1] in client.cmdList) {
+	// 	variableList["$RANDOM"] = getRandomInt(32768);
+	// 	client.commandHistory.push({ ...client.commandHistory[0] });
+	// 	client.commandHistory[0] = messageObject.content;
+	// }
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && (messageObject.content.split(" ")[0] in externalCommandList || messageObject.content.split(" ")[0] in builtinCommandList)) {
+		variableList["$RANDOM"] = getRandomInt(32768);
 		if (messageObject.author && messageObject.author.id != 0 && messageObject.terminalId)
 			// client.inputEmitter.emit("message", messageObject.content);
 			activeTerminals.filter(p => p.terminalId == messageObject.terminalId)[0].inputEmitter.emit("message", messageObject.content);
