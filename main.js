@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 257;
+const VERSION = 260;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -34,11 +34,22 @@ const discordSend = Discord.TextChannel.prototype.send;
 /**
  * Replaces send function of TextChannel
  */
+// function discordSendReplacement(text) {/* , options */
 function discordSendReplacement(text) {
 	// console.log(text);
 	client.commandOutputHistory.push(client.commandOutputHistory[0]);
 	client.commandOutputHistory[0] = text;
-	client.outputEmitter.emit('message', text);
+	// let termId = 0;
+	// if (options.terminalId) {
+	// 	termId = options.terminalId;
+	// 	delete options["terminalId"];
+	// }
+	// client.outputEmitter.emit('message', text);
+	let targetTerminal = null;
+	if (this.terminalId)
+		targetTerminal = activeTerminals.filter(p => p.terminalId == this.terminalId)[0];
+	if (targetTerminal != null)
+		targetTerminal.outputEmitter.emit('message', text);
 	return discordSend.apply(this, arguments);
 }
 
@@ -169,12 +180,31 @@ let ENV_VAR_STARTUP_NICKNAME;
 getVersionRemake().then(v => {
 	ENV_VAR_VERSION = v;
 });
+const events = require('events');
 
-// const terminals = [];
+/**
+ * @type {Array<LJSTerminal>}
+ */
+const activeTerminals = [];
 
-// class LJSTerminal {
-// 	send
-// }
+class LJSTerminal {
+	/**
+	 * @param {Discord.User} user
+	 * @param {*} variableList
+	 * @param {number} channelId
+	 */
+	constructor(user, variableList, channelId) {
+		this.user = user;
+		this.localVariableList = variableList;
+		this.channelId = channelId;
+		this.terminalId = Date.now();
+		this.generateEmitters();
+	}
+	generateEmitters() {
+		this.inputEmitter = new events.EventEmitter();
+		this.outputEmitter = new events.EventEmitter();
+	}
+}
 
 client.on('ready', () => {
 	console.log("Connected as " + client.user.tag);
@@ -285,9 +315,15 @@ client.registerCommand = (name, func, description) => {
 const currentlyRunningProcesses = {
 };
 
-const events = require('events');
 client.inputEmitter = new events.EventEmitter();
 client.outputEmitter = new events.EventEmitter();
+
+function getTerminalByTerminalId(termId) {
+	return activeTerminals.filter(p => p.terminalId == termId)[0];
+}
+function getTerminalByOwner(owner) {
+	return activeTerminals.filter(p => p.user.id == owner.id)[0];
+}
 
 client.safeClient = {
 	"cmdList": client.cmdList,
@@ -309,12 +345,22 @@ client.safeClient = {
 	"startupNickname": ENV_VAR_STARTUP_NICKNAME,
 	"removeListeners": () => { client.removeAllListeners("message"); },
 	"readAptRepo": getAllRepoPackagesRemake,
-	"getConsoleEmitters": {
-		"input": client.inputEmitter,
-		"output": client.outputEmitter,
-	},
+	// "getConsoleEmitters": {
+	// 	"input": client.inputEmitter,
+	// 	"output": client.outputEmitter,
+	// },
 	"currentlyRunningProcesses": currentlyRunningProcesses,
+	"getTerminalByTerminalId": getTerminalByTerminalId,
+	"getTerminalByOwner": getTerminalByOwner,
+	"createTerminalMessageObject": createTerminalMessageObject,
+	"createTerminal": createTerminal,
 };
+
+function createTerminal(author) {
+	const newTerm = new LJSTerminal(author, ENV_VAR_LIST, null);
+	activeTerminals.push(newTerm);
+	return newTerm;
+}
 
 /**
  * @type {Discord.TextChannel} channel set on boot
@@ -431,6 +477,7 @@ function startBootSeq(message) {
 			return;
 		// message.channel.send("WARNING RUNNING REWRITE EDITION!!! IT'S BROKEN NOW");
 		message.channel.send("`Linux JS Edition / rc1`\n`Login: root (automatic login)`\n\n`Linux JS v0.1." + VERSION + "-amd64`\n`Latest commit: " + ENV_VAR_VERSION + "`");
+		activeTerminals.push(new LJSTerminal(message.author, ENV_VAR_LIST, message.channel.id));
 		if (VERSION < ENV_VAR_VERSION) {
 			message.channel.send("Your LinuxJS instance may be outdated. If latest commits changed only `main.js` file, you can update using `" + ENV_VAR_PREFIX + "upgrade-os`. If you get errors after running upgrade command you should upgrade/re-download from Github.");
 		}
@@ -505,6 +552,16 @@ function register() {
 
 		// bot isn't booted, go back
 		if (!ENV_VAR_BOOT_COMPLETE) return;
+		const authorsOfTerminals = activeTerminals.map(function (item) {
+			return item.user;
+		});
+		if (authorsOfTerminals.indexOf(message.author) == -1) {
+			if (message.content.startsWith(ENV_VAR_PREFIX + "login")) {
+				activeTerminals.push(new LJSTerminal(message.author, ENV_VAR_LIST, message.channel.id));
+				return;
+			}
+			return;
+		}
 
 		// if (message.content.startsWith(ENV_VAR_PREFIX))
 		// 	client.commandHistory.push(message.content);
@@ -1826,6 +1883,30 @@ function createFakeMessageObject(text, redirectIncoming = false) {
 	// }
 }
 
+function createTerminalMessageObject(text, termId) {
+	const messageObject = {
+		"content": text, "channel": {
+			/**
+			 * @param {string} content
+			*/
+			send: function (content) {
+				getTerminalByTerminalId(termId).outputEmitter.emit("message", content);
+				content = null;
+				return {
+					"then": (v) => {
+						// v = null;
+						// console.log(v);
+						v(createTerminalMessageObject(content, termId));
+					},
+				};
+			},
+		}, "guild": ENV_VAR_NULL_GUILD,
+		"terminalId": termId,
+		"author": getTerminalByTerminalId(termId).user,
+	};
+	return messageObject;
+}
+
 function createConsoleMessageObject(text) {
 	const messageObject = { "content": text, "channel": ENV_VAR_CONSOLE_CHANNEL, "guild": ENV_VAR_NULL_GUILD };
 	return messageObject;
@@ -1850,8 +1931,9 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 		client.commandHistory[0] = messageObject.content;
 	}
 	if (messageObject.content.startsWith(ENV_VAR_PREFIX) && (messageObject.content.split(" ")[0] in externalCommandList || messageObject.content.split(" ")[0] in builtinCommandList)) {
-		if (messageObject.author && messageObject.author.id != 0)
-			client.inputEmitter.emit("message", messageObject.content);
+		if (messageObject.author && messageObject.author.id != 0 && messageObject.terminalId)
+			// client.inputEmitter.emit("message", messageObject.content);
+			activeTerminals.filter(p => p.terminalId == messageObject.terminalId)[0].inputEmitter.emit("message", messageObject.content);
 	}
 	// if (messageObject.content.startsWith(ENV_VAR_PREFIX + "apt install")) {
 	// 	aptCommand(messageObject, variableList);
@@ -2188,6 +2270,7 @@ function recreateMessageObject(original) {
 					// });
 				});
 			},
+			"terminalId": original.terminalId,
 		},
 		"guild": {
 			"me": {
