@@ -321,8 +321,8 @@ client.outputEmitter = new events.EventEmitter();
 function getTerminalByTerminalId(termId) {
 	return activeTerminals.filter(p => p.terminalId == termId)[0];
 }
-function getTerminalsByOwner(owner) {
-	return activeTerminals.filter(p => p.user.id == owner.id);
+function getTerminalByOwner(owner) {
+	return activeTerminals.filter(p => p.user.id == owner.id)[0];
 }
 
 client.safeClient = {
@@ -351,8 +351,7 @@ client.safeClient = {
 	// },
 	"currentlyRunningProcesses": currentlyRunningProcesses,
 	"getTerminalByTerminalId": getTerminalByTerminalId,
-	"getTerminalsByOwner": getTerminalsByOwner,
-	"getTerminalByOwner": (owner) => { return getTerminalsByOwner(owner)[0]; },
+	"getTerminalByOwner": getTerminalByOwner,
 	"createTerminalMessageObject": createTerminalMessageObject,
 	"createTerminal": createTerminal,
 };
@@ -2195,7 +2194,6 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				catch (error) {
 					console.log("Error occurred while executing " + element + ": ", error);
 				}
-				break;
 			}
 		}
 		for (let internalCommandIndex = 0; internalCommandIndex < Object.keys(builtinCommandList).length; internalCommandIndex++) {
@@ -2227,7 +2225,6 @@ function shellFunctionProcessor(messageObject, variableList, redirectReturn = fa
 				// catch (error) {
 				// 	console.log("Error occurred while executing " + element + ": ", error);
 				// }
-				break;
 			}
 		}
 		// console.log(client.commandOutputHistory);
