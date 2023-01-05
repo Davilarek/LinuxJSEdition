@@ -6,7 +6,7 @@
 // 11.11.2022 - Hello from the future! I had free time on 10.11 so I looked at the code and... I said "this doesn't look good...". So here we are in rewrite of most functions. Take a seat, get popcorn or something.
 // this is going to be painful
 
-const VERSION = 265;
+const VERSION = 266;
 
 const executeTimestamp = performance.now();
 const fs = require('fs');
@@ -522,7 +522,7 @@ const registerCommandObject = {
  */
 function register() {
 	console.log("Registering commands...");
-	console.log("Registering built-ins...");
+	console.log("Registering built-in commands...");
 	let finishedLoading = 0;
 	fs.readdirSync(ENV_VAR_BUILTIN_BINARIES).forEach(file => {
 		if (file == "empty.txt") { return; }
@@ -539,7 +539,7 @@ function register() {
 			console.log(error);
 		}
 	});
-	console.log("Finished loading built-ins. Registering commands...");
+	console.log("Finished loading built-ins. Registering other commands...");
 	client.on("message", (message) => {
 		if (message.author.bot) return;
 		//	console.log("test");
