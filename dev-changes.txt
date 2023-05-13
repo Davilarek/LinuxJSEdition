@@ -1,0 +1,4 @@
+token.txt
+prefix.txt
+VirtualDrive/root/.bashrc
+VirtualDrive/root/.config
