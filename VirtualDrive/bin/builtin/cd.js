@@ -18,6 +18,9 @@ exports.Init = function (args, chan, basePath, cli) {
                 pathCorrected = cli.coolTools.replaceAll(pathCorrected, Object.keys(localVarList)[i], localVarList[Object.keys(localVarList)[i]]);
             }
 
+            if (pathCorrected == "-")
+                pathCorrected = ENV_VAR_LIST["$OLDPWD"];
+
             if (pathCorrected.startsWith("/")) {
                 pathCorrected = pathCorrected.replace("/", ENV_VAR_BASE_DIR + path.sep + "VirtualDrive" + path.sep);
             }

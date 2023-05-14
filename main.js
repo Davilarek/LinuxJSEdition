@@ -91,11 +91,11 @@ const ENV_VAR_LIST = {
 		},
 	},
 	"$USER": "root",
-	"-": {
-		toString: function () {
-			return ENV_VAR_LIST["$OLDPWD"];
-		},
-	},
+	// "-": {
+	// 	toString: function () {
+	// 		return ENV_VAR_LIST["$OLDPWD"];
+	// 	},
+	// },
 };
 
 function getRandomInt(max) {
